@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./SimpleLoanTerm.sol";
-import "./interfaces/ISimpleLoanTerm.sol";
+import "./SimpleCrowdLoanTerm.sol";
+import "./interfaces/ISimpleCrowdLoanTerm.sol";
 
-contract LoanTermFactory is Ownable {
+contract SimpleCrowdLoanTermFactory is Ownable {
     address public admin;
-    ISimpleLoanTerm[] public loanTerms;
+    ISimpleCrowdLoanTerm[] public loanTerms;
 
     constructor() Ownable(msg.sender) {
         admin = msg.sender;
@@ -19,19 +19,19 @@ contract LoanTermFactory is Ownable {
         uint8 _interestRate,
         address _borrower
     ) public {
-        SimpleLoanTerm loanTerm = new SimpleLoanTerm(
+        SimpleCrowdLoanTerm loanTerm = new SimpleCrowdLoanTerm(
             _token,
             _targetAmount,
             _maturityPeriod,
             _interestRate,
             _borrower,
-            ISimpleLoanTerm.LoanStatus.Created,
+            ISimpleCrowdLoanTerm.LoanStatus.Created,
             admin
         );
         loanTerms.push(loanTerm);
     }
 
-    function getLoanTerm(uint index) public view returns (ISimpleLoanTerm) {
+    function getLoanTerm(uint index) public view returns (ISimpleCrowdLoanTerm) {
         return loanTerms[index];
     }
 }

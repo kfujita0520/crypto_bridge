@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.19;
 
 //import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -7,14 +7,14 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./interfaces/ISimpleLoanTerm.sol";
+import "./interfaces/ISimpleCrowdLoanTerm.sol";
 import "hardhat/console.sol";
 
 
-//At First, create simple Loan Term. This contract does not support advanced scenario such as partial refund etc.
+//At First, create simple crowd loan Term. This contract does not support advanced scenario such as partial refund etc.
 //i.e. borrower always needs to refund in full. This will be taken care another contract or to be enhanced
 //TODO must implement {IERC721Receiver-onERC721Received} to accept collateral NFT
-contract SimpleLoanTerm is ISimpleLoanTerm, ReentrancyGuard
+contract SimpleCrowdLoanTerm is ISimpleCrowdLoanTerm, ReentrancyGuard
 {
     using SafeERC20 for IERC20Metadata;
 
@@ -88,6 +88,7 @@ contract SimpleLoanTerm is ISimpleLoanTerm, ReentrancyGuard
     nonReentrant
     {
         require(amount > 0, "Cannot lend 0");
+        require(status == LoanStatus.Activated, "cannot loan in current status");
         require(targetAmount - totalOffer >= amount, "target amount has been reached");
         totalOffer += amount;
         balances[msg.sender] += amount;
@@ -111,6 +112,7 @@ contract SimpleLoanTerm is ISimpleLoanTerm, ReentrancyGuard
         require(block.timestamp > maturityTime, "Maturity date is not yet come so cannot withdraw");
         require(amount > 0, "Cannot withdraw 0");
         //TODO when withdraw Principal make sure all eligible interest for that lender should also claim back altogether
+        //TODO in case borrower did not paid back in full, only proportional amount of principal should be withdrawable
 
         totalOffer -= amount;
         balances[msg.sender] -= amount;
@@ -124,6 +126,7 @@ contract SimpleLoanTerm is ISimpleLoanTerm, ReentrancyGuard
 
     function claimInterest() public override nonReentrant
     {
+        //TODO in case defaulted, the behavior should be different
         uint256 claimableInterest = accruedInterest(msg.sender);
         if (claimableInterest > 0) {
             claimedInterest[msg.sender] += claimableInterest;
@@ -170,6 +173,7 @@ contract SimpleLoanTerm is ISimpleLoanTerm, ReentrancyGuard
         require(status == LoanStatus.Defaulted, "The loan is not default");
 
         //TODO: implementation and distribution
+        emit LiquidateCollateral(borrower, collateral.owner, collateral.tokenId);
     }
 
     /* ========== Borrower FUNCTIONS ========== */
@@ -183,6 +187,7 @@ contract SimpleLoanTerm is ISimpleLoanTerm, ReentrancyGuard
 
     function startBorrowing() external onlyBorrower(msg.sender) {
         require(status == LoanStatus.Activated, "not the status borrower can start");
+        maturityTime = block.timestamp + maturityPeriod;
         status = LoanStatus.Activated;
         emit StartLoan();
     }

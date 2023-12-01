@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-interface ISimpleLoanTerm {
+interface ISimpleCrowdLoanTerm {
 
     enum LoanStatus {
         Created,  //initial term creation
@@ -30,6 +30,7 @@ interface ISimpleLoanTerm {
     event StartLoan();
     event RedeemPrincipal(address indexed owner, uint256 tokenId);
     event WithdrawCollateral(address indexed owner, uint256 tokenId);
+    event LiquidateCollateral(address indexed borrower, address nft_owner, uint256 nft_tokenId);
 
 
     function balanceOf(address account) external view returns (uint256);

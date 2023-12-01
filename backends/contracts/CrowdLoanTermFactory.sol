@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./SimpleLoanTerm.sol";
-import "./interfaces/ISimpleLoanTerm.sol";
-import "./interfaces/ILoanTermFactory.sol";
+import "./CrowdLoanTerm.sol";
+import "./interfaces/ICrowdLoanTerm.sol";
+import "./interfaces/ICrowdLoanTermFactory.sol";
 import "./CCIPHandler.sol";
 import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 
@@ -16,7 +16,7 @@ contract CrowdLoanTermFactory is CCIPHandler {
 
     address public admin;
     uint64 public chainSelector;
-    ISimpleLoanTerm[] public loanTerms;
+    ICrowdLoanTerm[] public loanTerms;
     //execution contract address => master contract address
     //the element will be added when activateLoanTerm cross chain function is executed.
     mapping(address => MasterTerm) masterTerms;
@@ -37,13 +37,13 @@ contract CrowdLoanTermFactory is CCIPHandler {
         address _borrower,
         uint64 executionChainSelector
     ) public {
-        SimpleLoanTerm loanTerm = new SimpleLoanTerm(
+        CrowdLoanTerm loanTerm = new CrowdLoanTerm(
             _token,
             _targetAmount,
             _maturityPeriod,
             _interestRate,
             _borrower,
-            ISimpleLoanTerm.LoanStatus.Created,
+            ICrowdLoanTerm.LoanStatus.Created,
             admin,
             address(this),
             chainSelector,
@@ -53,7 +53,7 @@ contract CrowdLoanTermFactory is CCIPHandler {
         loanTerms.push(loanTerm);
     }
 
-    function getLoanTerm(uint index) public view returns (ISimpleLoanTerm) {
+    function getLoanTerm(uint index) public view returns (ICrowdLoanTerm) {
         return loanTerms[index];
     }
 
@@ -133,13 +133,13 @@ contract CrowdLoanTermFactory is CCIPHandler {
     )  internal  {
 
 
-        SimpleLoanTerm loanTerm = new SimpleLoanTerm(
+        CrowdLoanTerm loanTerm = new CrowdLoanTerm(
             _token,
             _targetAmount,
             _maturityPeriod,
             _interestRate,
             _borrower,
-            ISimpleLoanTerm.LoanStatus.Activated,
+            ICrowdLoanTerm.LoanStatus.Activated,
             admin,
             address(this),
             _masterChainSelector,
@@ -162,10 +162,10 @@ contract CrowdLoanTermFactory is CCIPHandler {
     )  internal  {
         //TODO: think about any other validation is require to verify this comes from correct LoanTerm contract
         //TODO: right now rely on the validation on source chain side if message destination is correct one or not.
-        //call withdrawCollateral function of SimpleLoanTerm contract
+        //call withdrawCollateral function of CrowdLoanTerm contract
         //but original function is borrowerOnly so that may need to implement it or change it to accept from factory as well
         //also NFT should be sent to borrower address rather than msg.sender for this case.
-        ISimpleLoanTerm(_loanTerm).withdrawCollateral();
+        ICrowdLoanTerm(_loanTerm).withdrawCollateral();
 
     }
 
