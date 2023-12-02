@@ -210,7 +210,8 @@ contract CrowdLoanTerm is ICrowdLoanTerm, ReentrancyGuard
     function startBorrowing() external onlyBorrower(msg.sender) {
         require(status == LoanStatus.Activated, "not the status borrower can start");
         maturityTime = block.timestamp + maturityPeriod;
-        status = LoanStatus.Activated;
+        initiatedTime = block.timestamp;
+        status = LoanStatus.Started;
         emit StartLoan();
     }
 
