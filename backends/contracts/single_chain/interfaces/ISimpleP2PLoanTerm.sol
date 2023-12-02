@@ -32,6 +32,7 @@ interface ISimpleP2PLoanTerm {
     event RedeemPrincipal(address indexed borrower, uint256 amount);
     event WithdrawCollateral(address indexed owner, uint256 tokenId);
     event TransferLoan(address indexed lender, address beneficiary);
+    event CancelLoan();
     event LiquidateCollateral(address indexed borrower, address indexed owner, uint256 tokenId);
 
     /* ========== VIEWS ========== */

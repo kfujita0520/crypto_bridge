@@ -193,6 +193,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     function cancelBorrowing() external onlyBorrower(msg.sender) {
         require(status == LoanStatus.Activated, "not the status borrower can cancel");
         //TODO: return the money to lender and withdraw collateral
+        emit CancelLoan();
 
     }
 
