@@ -21,12 +21,11 @@ interface ISimpleP2PLoanTerm {
 
     /* ========== EVENTS ========== */
     event Lend(address indexed lender, uint256 principal);
-    event Withdrawn(address indexed lender, uint256 amount);
-    event CollectInterest(uint256 amount);
-    event DefaultLoan();
+    event WithdrawPrincipal(address indexed lender, uint256 amount);
     event ClaimInterest(address indexed lender, uint256 amount);
-    event ApproveLoanTerm();
     event CollectPrincipal(uint256 amount);
+    event DefaultLoan();
+    event ApproveLoanTerm();
     event DepositCollateral(address indexed owner, uint256 tokenId);
     event StartLoan();
     event RedeemPrincipal(address indexed borrower, uint256 amount);
@@ -44,7 +43,6 @@ interface ISimpleP2PLoanTerm {
     /* ========== Lender FUNCTIONS ========== */
     function lend() external;
     function loanTransfer(address beneficiary) external;
-    function withdrawPrincipal() external;
     function claimInterest() external;
     function approveLoanTerm() external;
     function claimPrincipal() external;

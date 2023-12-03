@@ -119,40 +119,26 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         emit TransferLoan(msg.sender, beneficiary);
     }
 
-    //This is called during the working status when partial redeem is happen or redeemed status when principal is fully redeemed
-    function withdrawPrincipal() public override onlyLender(msg.sender)
-    {
-        //TODO when withdraw Principal make sure all eligible interest for that lender should also claim back altogether
-        //TODO in case borrower did not paid back in full, only proportional amount of principal should be withdrawable
-        require(status == LoanStatus.Started || status == LoanStatus.Redeemed, "Not the status lender can withdraw own princiapl");
-        claimInterest(); //TODO fix some implementaiton to be called internally
-        uint256 amount = withdrawablePrincipal();
-        token.safeTransfer(msg.sender, amount);
-        claimedPrincipal += amount;
-        emit Withdrawn(msg.sender, amount);
-        if(currentPrincipal() == 0 && collateral.owner == address(0)) {
-            status = LoanStatus.Completed;
-        }
-
-    }
-
     function claimInterest() public override onlyLender(msg.sender)
     {
-        //TODO in case defaulted, the behavior should be different
-        require (status == LoanStatus.Started || status == LoanStatus.Redeemed, "Not the status user can claim the interest");
+        //when status is Redeemed, use claimPrincipal. claimInterest will be performed altogether
+        require (status == LoanStatus.Started, "Not the status user can claim the interest");
+        _claimInterest();
+    }
+
+    //TODO take argument of collecting address
+    function _claimInterest() internal
+    {
         uint256 claimableAmount = claimableInterest();
         if (claimableAmount > 0) {
             claimedInterest += claimableAmount;
-            //TODO make it default if cannot collect interest
-            try token.transferFrom(borrower, msg.sender, claimableAmount) {//directly take interest from borrower's wallet.
-                console.log('success claim interest');
-                emit CollectInterest(claimableAmount);
+            try token.transferFrom(borrower, msg.sender, claimableAmount) {//directly take interest from borrower's wallet through this contract.
+                paidInterest += claimableAmount;//TODO paidInterest is not really used.
+                emit ClaimInterest(msg.sender, claimableAmount);
             } catch {
-                console.log('failed claim interest');
                 status = LoanStatus.Defaulted;
                 emit DefaultLoan();
             }
-            emit ClaimInterest(msg.sender, claimableAmount);
         }
     }
 
@@ -163,26 +149,49 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     }
 
 
+    //TODO consolidate withdrawPrincipal to claimPrincipal. collect interest together
+    //TODO when status is full, interest should be collect from this contract rather than borrower account
     //this function can be called only after maturity date
     function claimPrincipal() external onlyLender(msg.sender) {
-        require(block.timestamp > maturityTime, "Maturity date is not yet come so cannot collect");
 
-        // withdraw redeemed redeemedAmount. interest collection is also done within following function
-        withdrawPrincipal();
+        if (block.timestamp < maturityTime) { //This is called during the working status when partial redeem is happened
+            require(status == LoanStatus.Started, "The Loan is not started yet");
+            _withdrawPrincipal();
+            _claimInterest();
 
-        // usually after withdrawPrincipal, you will withdraw all money redeemed by borrwer to loan term contract
-        //Following logic will be executed when borrower did not redeem all principal even after maturity date.
-        //
-        if(totalAmount - redeemedAmount > 0) {//after maturity date, still not all amount is redeemed
+        } else if (status == LoanStatus.Redeemed){ //block.timestamp >= maturityTime and redemption is completed
+
+            _withdrawPrincipal();
+            _claimInterest();//TODO collect interest from this contract rather than borrower account
+            status = LoanStatus.Completed;
+        } else { //block.timestamp >= maturityTime and redemption is not completed i.e. delayed
+            //collected all redeemed money in this contract.
+            _withdrawPrincipal();
+            //try to collect the rest of principal directly from borrower as maturityTime is already expired.
             uint256 amount = totalAmount - claimedPrincipal;
             try token.transferFrom(borrower, msg.sender, amount) {
                 emit CollectPrincipal(amount);
+                //if principal collection is succeeded, then try to collect interest in the same way.
+                _claimInterest();
+
             } catch {
                 status = LoanStatus.Defaulted;
                 emit DefaultLoan();
             }
+
         }
 
+    }
+
+
+    function _withdrawPrincipal() internal {
+        uint256 amount = withdrawablePrincipal();
+        if (amount>0) {
+            token.safeTransfer(msg.sender, amount);
+            claimedPrincipal += amount;
+            //TODO change event name to appropriate one.
+            emit WithdrawPrincipal(msg.sender, amount);
+        }
     }
 
 
