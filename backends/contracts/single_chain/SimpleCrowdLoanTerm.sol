@@ -80,6 +80,9 @@ contract SimpleCrowdLoanTerm is ISimpleCrowdLoanTerm, ReentrancyGuard
 
     function accruedInterest(address account) public view override returns (uint256) {
         return balances[account] * accruedInterestPerToken() - claimedInterest[account];
+        //TODO in case supporting partial redeem of borrower, this will be calculated in following formula
+        //totalAccruedInterest * (offered[account] / totalOffer) - claimedInterest[account]
+        //Ex. balances[account] = offered[account] - redeemed[account]
     }
 
 
@@ -187,8 +190,9 @@ contract SimpleCrowdLoanTerm is ISimpleCrowdLoanTerm, ReentrancyGuard
 
     function startBorrowing() external onlyBorrower(msg.sender) {
         require(status == LoanStatus.Activated, "not the status borrower can start");
+        initiatedTime = block.timestamp;
         maturityTime = block.timestamp + maturityPeriod;
-        status = LoanStatus.Activated;
+        status = LoanStatus.Started;
         emit StartLoan();
     }
 
