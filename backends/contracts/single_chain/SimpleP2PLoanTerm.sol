@@ -14,8 +14,6 @@ import "hardhat/console.sol";
 //At First, create simple crowd loan Term. This contract does not support advanced scenario such as partial refund etc.
 //i.e. borrower always needs to refund in full. This will be taken care another contract or to be enhanced
 //TODO must implement {IERC721Receiver-onERC721Received} to accept collateral NFT
-//TODO implement cancel function
-//TODO write test case script
 contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
 {
     using SafeERC20 for IERC20Metadata;
@@ -29,7 +27,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
 
     /* ========== STATE VARIABLES ========== */
     IERC20Metadata public token;//loan token
-    uint8 public interestRate;// 0 - 10000
+    uint64 public interestRate;// 10000 = 100%
     uint256 public maturityPeriod;
 
     uint256 public initiatedTime; //TO be set when starting the loan. unchange once it is set for the record purpose.
@@ -48,7 +46,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     address public lender;//the account of lender
     address public admin;//the account of platform admin
     LoanStatus public status;
-    NFT public collateral;//TODO currently only support one NFT collateral. this can be more flexible by making it as array.
+    NFT public collateral;//TODO currently only support one NFT collateral. Multi-NFT collateral can be achieved by making it as array.
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -57,7 +55,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         address _token,
         uint256 _totalAmount,
         uint256 _maturityPeriod,
-        uint8 _interestRate,
+        uint64 _interestRate,
         address _borrower,
         address _lender,
         address _admin,
@@ -87,8 +85,12 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
 
     function accruedInterest() public view override returns (uint256) {
         uint256 latestTime = Math.min(maturityTime, block.timestamp);
-        return ((latestTime - lastCheckTime) / SECONDS_IN_A_YEAR) * (interestRate / DENOMINATOR)
-            * currentPrincipal() + lastCheckAccruedInterest;
+        // (latestTime - lastCheckTime) / SECONDS_IN_A_YEAR) * (interestRate / DENOMINATOR)
+        // * currentPrincipal() + lastCheckAccruedInterest
+        // change the calculate order in order to prevent some value is rounded to 0 in process.
+        uint256 amount = (latestTime - lastCheckTime) * currentPrincipal() * interestRate / (SECONDS_IN_A_YEAR * DENOMINATOR)
+                            + lastCheckAccruedInterest;
+        return amount;
     }
 
     function claimableInterest() public view override returns (uint256) {
@@ -103,9 +105,10 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     /* ========== Lender FUNCTIONS ========== */
     function lend() external override onlyLender(msg.sender)
     {
+        //TODO better to support partial amount of lend in the future.
         require(status == LoanStatus.Activated, "cannot loan in current status");
-
-        token.safeTransferFrom(msg.sender, address(this), totalAmount);
+        //in case the lender did twice, nothing will be deposited
+        token.safeTransferFrom(msg.sender, address(this), totalAmount - principal);
         principal = totalAmount;
         emit Lend(msg.sender, principal);
     }
@@ -142,8 +145,10 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
             claimedInterest += claimableAmount;
             //TODO make it default if cannot collect interest
             try token.transferFrom(borrower, msg.sender, claimableAmount) {//directly take interest from borrower's wallet.
+                console.log('success claim interest');
                 emit CollectInterest(claimableAmount);
             } catch {
+                console.log('failed claim interest');
                 status = LoanStatus.Defaulted;
                 emit DefaultLoan();
             }
@@ -191,18 +196,23 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     }
 
     function cancelBorrowing() external onlyBorrower(msg.sender) {
-        require(status == LoanStatus.Activated, "not the status borrower can cancel");
-        //TODO: return the money to lender and withdraw collateral
+        require(status == LoanStatus.Activated, "borrower can cancel only before the loan starts");
+        _withdrawCollateral(borrower);
+        if (principal > 0){
+            token.safeTransfer(lender, principal);
+        }
         emit CancelLoan();
 
     }
 
     function startBorrowing() external onlyBorrower(msg.sender) {
         require(status == LoanStatus.Activated, "not the status borrower can start");
+        require(principal != 0, "Lender does not offer the fund yet");
         initiatedTime = block.timestamp;
         maturityTime = block.timestamp + maturityPeriod;
         lastCheckTime = initiatedTime;
         status = LoanStatus.Started;
+        token.safeTransfer(borrower, principal);
         emit StartLoan();
     }
 
@@ -212,6 +222,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         uint256 amount = currentPrincipal();
         token.transferFrom(msg.sender, address(this), amount);
         _checkAccruedInterest(); //need to execute this before redeemedAmount is updated. because currentPrincipal() will be changed.
+        //TODO since collateral will be withdrawn, better to let borrower to pay the rest of interest at this timing.
         redeemedAmount += amount;
         status = LoanStatus.Redeemed;
         if(block.timestamp < maturityTime) {
@@ -219,7 +230,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         }
         emit RedeemPrincipal(msg.sender, amount);
 
-        _withdrawCollateral();
+        _withdrawCollateral(borrower);
     }
 
     function redeemPartialPrincipal(uint256 amount) external onlyBorrower(msg.sender) {
@@ -233,27 +244,25 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     }
 
     function _checkAccruedInterest() internal {
+        lastCheckAccruedInterest = accruedInterest();//need to set lastCheckAccruedInterest before updating lastCheckTime
         lastCheckTime = block.timestamp;
-        lastCheckAccruedInterest = accruedInterest();
+
     }
 
-    function withdrawCollateral() external onlyBorrower(msg.sender) {
-        _withdrawCollateral();
-    }
 
-    function _withdrawCollateral() internal {
+    function _withdrawCollateral(address receiver) internal {
         require(status == LoanStatus.Redeemed, "loan is not redeemed yet");
-        IERC721(collateral.owner).safeTransferFrom(address(this), borrower, collateral.tokenId);
+        IERC721(collateral.owner).safeTransferFrom(address(this), receiver, collateral.tokenId);
         collateral.owner = address(0);
         status = LoanStatus.Completed;
-        emit WithdrawCollateral(collateral.owner, collateral.tokenId);
+        emit WithdrawCollateral(receiver, collateral.owner, collateral.tokenId);
     }
 
     /* ========== Admin FUNCTIONS ========== */
     function liquidateCollateral() external onlyAdmin(msg.sender) {
         require(status == LoanStatus.Defaulted, "The loan is not default");
 
-        //TODO: implementation for selling off and distribution
+        _withdrawCollateral(admin);
         emit LiquidateCollateral(borrower, collateral.owner, collateral.tokenId);
     }
 

@@ -18,10 +18,10 @@ contract SimpleP2PLoanTermFactory is Ownable, ISimpleP2PLoanTermFactory {
         address _token,
         uint256 _totalAmount,
         uint256 _maturityPeriod,
-        uint8 _interestRate,
+        uint64 _interestRate,
         address _borrower,
         address _lender
-    ) public {
+    ) public returns(uint index){
         SimpleP2PLoanTerm loanTerm = new SimpleP2PLoanTerm(
             _token,
             _totalAmount,
@@ -34,10 +34,15 @@ contract SimpleP2PLoanTermFactory is Ownable, ISimpleP2PLoanTermFactory {
         );
         loanTerms.push(loanTerm);
         emit CreateP2PLoanTerm(_token, _totalAmount, _maturityPeriod, _interestRate, _borrower, _lender, admin);
+        return loanTerms.length - 1;
     }
 
     function getSimpleP2PLoanTerm(uint index) public view returns (ISimpleP2PLoanTerm) {
         return loanTerms[index];
+    }
+
+    function getLoanTermsLength() public view returns (uint256) {
+        return loanTerms.length;
     }
 
 }

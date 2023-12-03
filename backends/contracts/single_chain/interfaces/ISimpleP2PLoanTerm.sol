@@ -30,7 +30,7 @@ interface ISimpleP2PLoanTerm {
     event DepositCollateral(address indexed owner, uint256 tokenId);
     event StartLoan();
     event RedeemPrincipal(address indexed borrower, uint256 amount);
-    event WithdrawCollateral(address indexed owner, uint256 tokenId);
+    event WithdrawCollateral(address indexed receiver, address owner, uint256 tokenId);
     event TransferLoan(address indexed lender, address beneficiary);
     event CancelLoan();
     event LiquidateCollateral(address indexed borrower, address indexed owner, uint256 tokenId);
@@ -55,7 +55,6 @@ interface ISimpleP2PLoanTerm {
     function startBorrowing() external;
     function redeemFullPrincipal() external;
     function redeemPartialPrincipal(uint256 amount) external;
-    function withdrawCollateral() external;
 
     /* ========== Admin FUNCTIONS ========== */
     function liquidateCollateral() external;

@@ -22,7 +22,7 @@ interface ICrowdLoanTermFactory {
         address _token,
         uint256 _targetAmount,
         uint256 _maturityPeriod,
-        uint8 _interestRate,
+        uint64 _interestRate,
         address _borrower,
         uint64 _executionChainSelector
     ) external;

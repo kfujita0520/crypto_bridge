@@ -9,7 +9,7 @@ interface ISimpleP2PLoanTermFactory {
         address indexed token,
         uint256 totalAmount,
         uint256 maturityPeriod,
-        uint8 interestRate,
+        uint64 interestRate,
         address indexed borrower,
         address indexed lender,
         address admin
@@ -19,10 +19,10 @@ interface ISimpleP2PLoanTermFactory {
         address token,
         uint256 totalAmount,
         uint256 maturityPeriod,
-        uint8 interestRate,
+        uint64 interestRate,
         address borrower,
         address lender
-    ) external;
+    ) external returns(uint index);
 
     function getSimpleP2PLoanTerm(uint index) external view returns (ISimpleP2PLoanTerm);
 }
