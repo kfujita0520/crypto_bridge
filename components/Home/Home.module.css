@@ -1,0 +1,383 @@
+.bulletinBoard {
+    position: absolute;
+    top: 219px;
+    left: 43px;
+    font-size: 80px;
+    letter-spacing: -0.01em;
+    font-weight: 300;
+    text-align: center;
+}
+.cryptobridgeLogo3RemovebgPIcon {
+    position: absolute;
+    top: 45px;
+    left: 43px;
+    width: 237px;
+    height: 63px;
+    object-fit: cover;
+}
+.profileIconChild {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    border-radius: 50%;
+    background-color: #1a191e;
+    width: 34px;
+    height: 34px;
+}
+.p {
+    position: absolute;
+    top: 4px;
+    left: 7px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 19.8px;
+    height: 28.88px;
+}
+.profileIcon {
+    position: relative;
+    width: 34px;
+    height: 34px;
+}
+.profileIconWrapper {
+    position: absolute;
+    top: 59px;
+    left: 1638px;
+    width: 34px;
+    height: 35px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+.notificationIcon1 {
+    position: absolute;
+    top: 59px;
+    left: 1564px;
+    width: 31px;
+    height: 35px;
+}
+.walletIcon1 {
+    position: absolute;
+    top: 58px;
+    left: 1485px;
+    width: 37px;
+    height: 35px;
+}
+.header {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background-color: #1a191e;
+    width: 1728px;
+    height: 152px;
+    overflow: hidden;
+    text-align: center;
+    font-size: 20px;
+    color: #f1f1f1;
+}
+.loanOwnedChild {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0%;
+    right: 0%;
+    bottom: 0%;
+    left: 0%;
+    border-radius: 7px;
+    background-color: #333334;
+}
+.eth {
+    position: absolute;
+    top: 26.67%;
+    left: 43.64%;
+    font-size: 20px;
+    font-weight: 500;
+}
+.requestedAmount {
+    position: absolute;
+    top: 14.81%;
+    left: 43.64%;
+    font-weight: 500;
+    color: #b2b2b5;
+}
+.months {
+    position: absolute;
+    top: 26.67%;
+    left: 64.3%;
+    font-size: 20px;
+    font-weight: 500;
+}
+.repaymentPeroid {
+    position: absolute;
+    top: 14.81%;
+    left: 64.3%;
+    font-weight: 500;
+    color: #b2b2b5;
+}
+.span {
+    color: rgba(0, 0, 0, 0.2);
+}
+.nft12342322 {
+    position: absolute;
+    top: 70.37%;
+    left: 43.64%;
+    font-size: 20px;
+    font-weight: 500;
+}
+.collateral {
+    position: absolute;
+    top: 58.52%;
+    left: 43.64%;
+    font-weight: 500;
+    color: #b2b2b5;
+}
+.div {
+    position: absolute;
+    top: 26.67%;
+    left: 83.86%;
+    font-size: 20px;
+    font-weight: 500;
+}
+.interestRate {
+    position: absolute;
+    top: 14.81%;
+    left: 83.86%;
+    font-weight: 500;
+    color: #b2b2b5;
+}
+.maskIcon {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0%;
+    right: 0%;
+    bottom: 0%;
+    left: 0%;
+    max-width: 100%;
+    overflow: hidden;
+    max-height: 100%;
+}
+.j {
+    position: absolute;
+    top: 5.45px;
+    left: 28.81px;
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 43.6px;
+    height: 91.1px;
+}
+.maskParent {
+    position: absolute;
+    height: 75.56%;
+    width: 13.95%;
+    top: 12.59%;
+    right: 83.45%;
+    bottom: 11.85%;
+    left: 2.6%;
+    text-align: center;
+    font-size: 100px;
+    color: #fff;
+}
+.loanOwnedItem {
+    position: absolute;
+    height: 13.55%;
+    width: 13.95%;
+    top: 37.04%;
+    right: 66.35%;
+    bottom: 49.42%;
+    left: 19.7%;
+    max-width: 100%;
+    overflow: hidden;
+    max-height: 100%;
+}
+.button {
+    position: relative;
+    letter-spacing: 0.01em;
+    text-transform: capitalize;
+    font-weight: 500;
+}
+.buttonOutline {
+    position: absolute;
+    top: 86px;
+    left: 142px;
+    border-radius: 5px;
+    background-color: #333334;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    color: #fff;
+}
+.johnDoe {
+    position: absolute;
+    top: 22px;
+    left: 144px;
+    font-size: 24px;
+    font-weight: 500;
+    color: #fff;
+    text-align: center;
+}
+.buttonFilled {
+    position: absolute;
+    top: 86px;
+    left: 638px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, rgba(241, 32, 57, 0.65), rgba(181, 70, 250, 0.65));
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+}
+.loanOwned {
+    position: absolute;
+    top: 347px;
+    left: 43px;
+    width: 731px;
+    height: 135px;
+    color: #f1f1f1;
+}
+.buttonFilled1 {
+    position: absolute;
+    top: calc(50% + 18.5px);
+    left: calc(50% + 227.5px);
+    border-radius: 5px;
+    background: linear-gradient(180deg, rgba(32, 69, 241, 0.65), rgba(70, 102, 250, 0.65));
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+}
+.eth1 {
+    position: absolute;
+    top: 26.67%;
+    left: 43.64%;
+    font-size: 20px;
+    font-weight: 500;
+    color: #f1f1f1;
+}
+.months1 {
+    position: absolute;
+    top: 26.67%;
+    left: 64.3%;
+    font-size: 20px;
+    font-weight: 500;
+    color: #f1f1f1;
+}
+.nft123423221 {
+    position: absolute;
+    top: 70.37%;
+    left: 43.64%;
+    font-size: 20px;
+    font-weight: 500;
+    color: #f1f1f1;
+}
+.div1 {
+    position: absolute;
+    top: 26.67%;
+    left: 83.86%;
+    font-size: 20px;
+    font-weight: 500;
+    color: #f1f1f1;
+}
+.maskGroup {
+    position: absolute;
+    height: 75.56%;
+    width: 13.95%;
+    top: 12.59%;
+    right: 83.45%;
+    bottom: 11.85%;
+    left: 2.6%;
+    text-align: center;
+    font-size: 100px;
+}
+.buttonOutline1 {
+    position: absolute;
+    top: 86px;
+    left: 142px;
+    border-radius: 5px;
+    background-color: #333334;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+}
+.johnDoe1 {
+    position: absolute;
+    top: 22px;
+    left: 144px;
+    font-size: 24px;
+    font-weight: 500;
+    text-align: center;
+}
+.loanUnownedUnaccepted {
+    position: absolute;
+    top: 347px;
+    left: 941px;
+    width: 731px;
+    height: 135px;
+}
+.loanUnownedUnaccepted1 {
+    position: absolute;
+    top: 543px;
+    left: 43px;
+    width: 731px;
+    height: 135px;
+}
+.loanUnownedUnaccepted2 {
+    position: absolute;
+    top: 554px;
+    left: 941px;
+    width: 731px;
+    height: 135px;
+}
+.loanUnownedUnaccepted3 {
+    position: absolute;
+    top: 739px;
+    left: 43px;
+    width: 731px;
+    height: 135px;
+}
+.button10 {
+    position: relative;
+    font-weight: 500;
+}
+.buttonFilled5 {
+    position: absolute;
+    top: 249px;
+    left: 1468px;
+    border-radius: 5px;
+    background: linear-gradient(180deg, rgba(32, 69, 241, 0.65), rgba(70, 102, 250, 0.65));
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    font-size: 24px;
+}
+.home {
+    position: relative;
+    width: 100%;
+    height: 1117px;
+    overflow: hidden;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: top;
+    text-align: left;
+    font-size: 14px;
+    color: #fff;
+    font-family: Roboto;
+}
+
