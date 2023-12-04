@@ -21,14 +21,14 @@ interface ISimpleP2PLoanTerm {
 
     /* ========== EVENTS ========== */
     event Lend(address indexed lender, uint256 principal);
-    event WithdrawPrincipal(address indexed lender, uint256 amount);
-    event ClaimInterest(address indexed lender, uint256 amount);
-    event CollectPrincipal(uint256 amount);
+    event ClaimPrincipal(address from, address indexed lender, uint256 amount);
+    event ClaimInterest(address indexed from, address lender, uint256 amount);
     event DefaultLoan();
     event ApproveLoanTerm();
     event DepositCollateral(address indexed owner, uint256 tokenId);
     event StartLoan();
     event RedeemPrincipal(address indexed borrower, uint256 amount);
+    event RedeemInterest(address indexed borrower, uint256 amount);
     event WithdrawCollateral(address indexed receiver, address owner, uint256 tokenId);
     event TransferLoan(address indexed lender, address beneficiary);
     event CancelLoan();

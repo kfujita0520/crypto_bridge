@@ -100,10 +100,10 @@ describe('Simple P2P Loan', () => {
 
 
 
-    describe('Simple lending', () => {
+    describe('Normal Lending Flow', () => {
         let LoanTerm: LoanTerm;
         let USDToken: USDToken;
-        let MyNFT;
+        let MyNFT: MyNFT;
 
         before(async ()=>{
           ({ USDToken, MyNFT } = await deployToken());
@@ -176,23 +176,87 @@ describe('Simple P2P Loan', () => {
             console.log(await USDToken.balanceOf(LoanTerm.address));
             expect(await USDToken.balanceOf(lender.address)).to.be.equal(ethers.BigNumber.from("400274725592694342694342"));
             expect(await USDToken.balanceOf(borrower.address)).to.be.equal(ethers.BigNumber.from("109725274407305657305658"));
-            await time.increase(SECONDS_IN_A_WEEK * 5 );
+
 
         });
 
-        it('redeem a half of principal', async () => {
-            console.log(await LoanTerm.withdrawablePrincipal());
-            console.log(await LoanTerm.currentPrincipal());
-            console.log('Status: ', await LoanTerm.status());
+        it('borrower redeem a half of principal and lender claim it', async () => {
+            await time.increase(SECONDS_IN_A_WEEK * 5 );
+            console.log('Withdrawable principal: ', await LoanTerm.withdrawablePrincipal());
+            console.log('Current principal: ', await LoanTerm.currentPrincipal());
             await LoanTerm.connect(borrower).redeemPartialPrincipal(ethers.utils.parseEther("50000"));
-            console.log(await LoanTerm.claimableInterest());
-            console.log(await LoanTerm.accruedInterest());
-            console.log(await LoanTerm.withdrawablePrincipal());
-            console.log(await LoanTerm.currentPrincipal());
-            console.log(await USDToken.balanceOf(borrower.address));
-            await time.increase(SECONDS_IN_A_WEEK * 5 );
+            expect(await LoanTerm.withdrawablePrincipal()).to.be.equal(ethers.utils.parseEther("50000"));
+            expect(await LoanTerm.currentPrincipal()).to.be.equal(ethers.utils.parseEther("50000"));
+            console.log('Withdrawable principal: ', await LoanTerm.withdrawablePrincipal());
+            console.log('Claimable Interest: ', await LoanTerm.claimableInterest());
+            expect(await LoanTerm.claimableInterest()).to.be.equal(ethers.BigNumber.from("961538779507529507530"));
+
+            //Claim principal and interest by lender
+            await LoanTerm.connect(lender).claimPrincipal();
+            console.log('Withdrawable principal: ', await LoanTerm.withdrawablePrincipal());
+            expect(await LoanTerm.withdrawablePrincipal()).to.be.equal(ethers.utils.parseEther("0"));
+            console.log('Claimable Interest: ', await LoanTerm.claimableInterest());
+            expect(await LoanTerm.claimableInterest()).to.be.equal(ethers.utils.parseEther("0"));
+            console.log('Accrued Interest for Borrower: ', await LoanTerm.accruedInterest());
+            console.log('USDToken balance of borrower: ', await USDToken.balanceOf(borrower.address));
+            expect(await USDToken.balanceOf(borrower.address)).to.be.equal(ethers.BigNumber.from("58763735468813593813595"));
+            console.log('USDToken balance of loan contract: ', await USDToken.balanceOf(LoanTerm.address));
+
 
         });
+
+        it('redeem in full', async () => {
+            await time.increase(SECONDS_IN_A_WEEK * 5 );
+            //accrued interest will be half of previous period
+            console.log('Claimable Interest: ', await LoanTerm.claimableInterest());
+            expect(await LoanTerm.claimableInterest()).to.be.equal(ethers.BigNumber.from("480769230769230769231"));
+            console.log('Accrued Interest for Borrower: ', await LoanTerm.accruedInterest());
+            console.log('Paid Interest: ', await LoanTerm.paidInterest());
+            console.log('USDToken balance of borrower: ', await USDToken.balanceOf(borrower.address))
+            console.log('USDToken balance of loan contract: ', await USDToken.balanceOf(LoanTerm.address));
+            console.log('NFT', await LoanTerm.collateral());
+            let NFT_tokenId = (await LoanTerm.collateral()).tokenId
+
+            await LoanTerm.connect(borrower).redeemFullPrincipal();
+            expect(await LoanTerm.status()).to.be.equal(LoanStatus.Redeemed);
+            //both principal and interest will be redeemed to contract
+            console.log('Accrued Interest for Borrower: ', await LoanTerm.accruedInterest());
+            console.log('Paid Interest: ', await LoanTerm.paidInterest());
+            // confirm paidInterest == accrued interest. all interest is paid
+            expect(await LoanTerm.accruedInterest()).to.be.equal(await LoanTerm.paidInterest());
+            expect(await LoanTerm.withdrawablePrincipal()).to.be.equal(ethers.utils.parseEther("50000"));
+            console.log('USDToken balance of borrower: ', await USDToken.balanceOf(borrower.address))
+            console.log('USDToken balance of loan contract: ', await USDToken.balanceOf(LoanTerm.address));
+            //NFT is withdrawn
+            console.log('NFT', await LoanTerm.collateral());
+            console.log('Owner of MyNFT', await MyNFT.ownerOf(NFT_tokenId));
+            expect((await LoanTerm.collateral()).owner).to.be.equal(ethers.constants.AddressZero);
+            expect(await MyNFT.ownerOf(NFT_tokenId)).to.be.equal(borrower.address);
+
+        });
+
+        it('complete by claim principal', async () => {
+
+            await time.increase(SECONDS_IN_A_DAY * 5 );
+            // no additional interest is accrued after full redemption
+            expect(await LoanTerm.accruedInterest()).to.be.equal(await LoanTerm.paidInterest());
+
+            console.log('Claimable Interest: ', await LoanTerm.claimableInterest());
+            console.log('Withdrawable principal: ', await LoanTerm.withdrawablePrincipal());
+            console.log('USDToken balance of loan contract: ', await USDToken.balanceOf(LoanTerm.address));
+            await LoanTerm.connect(lender).claimPrincipal();
+            console.log('Withdrawable principal: ', await LoanTerm.withdrawablePrincipal());
+            expect(await LoanTerm.withdrawablePrincipal()).to.be.equal(ethers.utils.parseEther("0"));
+            console.log('USDToken balance of loan contract: ', await USDToken.balanceOf(LoanTerm.address));
+            expect(await USDToken.balanceOf(LoanTerm.address)).to.be.equal(ethers.utils.parseEther("0"));
+            console.log('Claimable Interest: ', await LoanTerm.claimableInterest());
+            expect(await LoanTerm.claimableInterest()).to.be.equal(ethers.utils.parseEther("0"));
+
+            expect(await LoanTerm.status()).to.be.equal(LoanStatus.Completed);
+
+
+        });
+
 
 
 
@@ -200,16 +264,39 @@ describe('Simple P2P Loan', () => {
     });
 
     //Cancel, failed redemption
-    describe('Second lending', () => {
+    describe('Side Scenario of Lending', () => {
          let LoanTerm: LoanTerm;
          let USDToken: USDToken;
-         let MyNFT;
+         let MyNFT: MyNFT;
 
          before(async ()=>{
              ({ USDToken, MyNFT } = await deployToken());
          });
 
-         it('just test', async () => {
+         it('create term and deposit collateral', async () => {
+
+             await LoanTermFactory.createLoanTerm(
+                              USDToken.address,
+                              ethers.utils.parseEther("100000"),
+                              SECONDS_IN_A_WEEK * 20, //20 weeks
+                              1000, //10%
+                              borrower.address,
+                              lender.address);
+
+             let loanTermsLength = await LoanTermFactory.getLoanTermsLength();
+             let loanTermIndex = loanTermsLength - 1;
+             let loanTermAddress = await LoanTermFactory.loanTerms(loanTermIndex);
+             console.log("Loan Term Address: ", loanTermAddress);
+             LoanTerm = await hre.ethers.getContractAt("SimpleP2PLoanTerm", loanTermAddress);
+
+             await MyNFT.connect(borrower).approve(LoanTerm.address, loanTermIndex);
+             await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, loanTermIndex);
+             console.log('Owner of MyNFT', await MyNFT.ownerOf(loanTermIndex));
+             expect(await MyNFT.ownerOf(loanTermIndex)).to.equal(LoanTerm.address);
+         });
+
+         it('Cancel Borrowing', async () => {
+             //TODO: check status, NFT redemption, fund return
 
 
          });

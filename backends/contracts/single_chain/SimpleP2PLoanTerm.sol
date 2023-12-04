@@ -11,8 +11,7 @@ import "./interfaces/ISimpleP2PLoanTerm.sol";
 import "hardhat/console.sol";
 
 
-//At First, create simple crowd loan Term. This contract does not support advanced scenario such as partial refund etc.
-//i.e. borrower always needs to refund in full. This will be taken care another contract or to be enhanced
+//At First, create simple P2P loan Term. This contract does not support cross chain but simply works on a single chain
 //TODO must implement {IERC721Receiver-onERC721Received} to accept collateral NFT
 contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
 {
@@ -46,7 +45,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     address public lender;//the account of lender
     address public admin;//the account of platform admin
     LoanStatus public status;
-    NFT public collateral;//TODO currently only support one NFT collateral. Multi-NFT collateral can be achieved by making it as array.
+    NFT public collateral;//TODO currently only support one NFT collateral. Multi-NFT collateral can be achieved by making this field as array.
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -126,15 +125,16 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         _claimInterest();
     }
 
-    //TODO take argument of collecting address
+    //this function is called through claimInterest by lender (payer: borrower, receiver: lender)
+    // claimPrincipal by lender (payer: this contract, receiver: lender) will be handled separatelly
     function _claimInterest() internal
     {
         uint256 claimableAmount = claimableInterest();
         if (claimableAmount > 0) {
             claimedInterest += claimableAmount;
             try token.transferFrom(borrower, msg.sender, claimableAmount) {//directly take interest from borrower's wallet through this contract.
-                paidInterest += claimableAmount;//TODO paidInterest is not really used.
-                emit ClaimInterest(msg.sender, claimableAmount);
+                paidInterest += claimableAmount; //paid amount of borrower is updated.
+                emit ClaimInterest(borrower, msg.sender, claimableAmount);
             } catch {
                 status = LoanStatus.Defaulted;
                 emit DefaultLoan();
@@ -149,9 +149,11 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     }
 
 
-    //TODO consolidate withdrawPrincipal to claimPrincipal. collect interest together
-    //TODO when status is full, interest should be collect from this contract rather than borrower account
-    //this function can be called only after maturity date
+
+    //This function is called
+    //1. after when borrower made a partial redemption
+    //2. after when borrower made a full redemption
+    //3. after maturity period (not sure if all liability are fully redeemed or not by borrower)
     function claimPrincipal() external onlyLender(msg.sender) {
 
         if (block.timestamp < maturityTime) { //This is called during the working status when partial redeem is happened
@@ -160,17 +162,18 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
             _claimInterest();
 
         } else if (status == LoanStatus.Redeemed){ //block.timestamp >= maturityTime and redemption is completed
-
             _withdrawPrincipal();
-            _claimInterest();//TODO collect interest from this contract rather than borrower account
-            status = LoanStatus.Completed;
+            //_claimInterest(address(this));
+            if (status != LoanStatus.Defaulted){ //if _claimInterest is failed for some reason, keep status default and should not change "completed"
+                status = LoanStatus.Completed;
+            }
         } else { //block.timestamp >= maturityTime and redemption is not completed i.e. delayed
             //collected all redeemed money in this contract.
             _withdrawPrincipal();
             //try to collect the rest of principal directly from borrower as maturityTime is already expired.
             uint256 amount = totalAmount - claimedPrincipal;
             try token.transferFrom(borrower, msg.sender, amount) {
-                emit CollectPrincipal(amount);
+                emit ClaimPrincipal(borrower, msg.sender, amount);
                 //if principal collection is succeeded, then try to collect interest in the same way.
                 _claimInterest();
 
@@ -189,8 +192,21 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         if (amount>0) {
             token.safeTransfer(msg.sender, amount);
             claimedPrincipal += amount;
-            //TODO change event name to appropriate one.
-            emit WithdrawPrincipal(msg.sender, amount);
+            emit ClaimPrincipal(address(this), msg.sender, amount);
+        }
+        // in case redeemed in full, interest should be collected from this address.
+        // this is special case. otherwise, call _claimInterest function and collect from borrower
+        if(status == LoanStatus.Redeemed) {
+            uint256 claimableAmount = claimableInterest();
+            if (claimableAmount > 0) {
+                claimedInterest += claimableAmount;
+                try token.transfer(msg.sender, claimableAmount) {//directly take interest from borrower's wallet through this contract.
+                    emit ClaimInterest(borrower, msg.sender, claimableAmount);
+                } catch {
+                    status = LoanStatus.Defaulted;
+                    emit DefaultLoan();
+                }
+            }
         }
     }
 
@@ -231,15 +247,27 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         uint256 amount = currentPrincipal();
         token.transferFrom(msg.sender, address(this), amount);
         _checkAccruedInterest(); //need to execute this before redeemedAmount is updated. because currentPrincipal() will be changed.
-        //TODO since collateral will be withdrawn, better to let borrower to pay the rest of interest at this timing.
         redeemedAmount += amount;
         status = LoanStatus.Redeemed;
+        //since collateral will be withdrawn, borrower needs to pay the rest of accrued interest at once.
+        _redeemInterest();
+
         if(block.timestamp < maturityTime) {
-            maturityTime = block.timestamp; //early redemption so stop interest accruing at this momement
+            maturityTime = block.timestamp; //for early redemption, needs to stop accruing interest at this point
         }
         emit RedeemPrincipal(msg.sender, amount);
 
         _withdrawCollateral(borrower);
+    }
+
+    function _redeemInterest() internal {
+        require(status == LoanStatus.Redeemed, "only process when principal was fully redeemed");
+        uint256 amount = accruedInterest() - paidInterest;
+        token.transferFrom(msg.sender, address(this), amount);
+        paidInterest += amount;
+
+        emit RedeemInterest(msg.sender, amount);
+
     }
 
     function redeemPartialPrincipal(uint256 amount) external onlyBorrower(msg.sender) {
@@ -263,7 +291,6 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         require(status == LoanStatus.Redeemed, "loan is not redeemed yet");
         IERC721(collateral.owner).safeTransferFrom(address(this), receiver, collateral.tokenId);
         collateral.owner = address(0);
-        status = LoanStatus.Completed;
         emit WithdrawCollateral(receiver, collateral.owner, collateral.tokenId);
     }
 
