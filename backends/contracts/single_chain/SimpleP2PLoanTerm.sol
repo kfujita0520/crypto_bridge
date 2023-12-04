@@ -226,6 +226,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         if (principal > 0){
             token.safeTransfer(lender, principal);
         }
+        status = LoanStatus.Cancelled;
         emit CancelLoan();
 
     }
@@ -257,6 +258,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         }
         emit RedeemPrincipal(msg.sender, amount);
 
+        require(status == LoanStatus.Redeemed, "loan is not redeemed yet");
         _withdrawCollateral(borrower);
     }
 
@@ -288,7 +290,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
 
 
     function _withdrawCollateral(address receiver) internal {
-        require(status == LoanStatus.Redeemed, "loan is not redeemed yet");
+
         IERC721(collateral.owner).safeTransferFrom(address(this), receiver, collateral.tokenId);
         collateral.owner = address(0);
         emit WithdrawCollateral(receiver, collateral.owner, collateral.tokenId);

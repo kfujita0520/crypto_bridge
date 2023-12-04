@@ -21,7 +21,7 @@ const enum LoanStatus {
     Started = 2,
     Redeemed = 3,
     Completed = 4,
-    Canceled = 5,
+    Cancelled = 5,
     Defaulted = 6
 }
 
@@ -125,10 +125,11 @@ describe('Simple P2P Loan', () => {
             console.log("Loan Term Address: ", loanTermAddress);
             LoanTerm = await hre.ethers.getContractAt("SimpleP2PLoanTerm", loanTermAddress);
 
-            await MyNFT.connect(borrower).approve(LoanTerm.address, loanTermIndex);
-            await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, loanTermIndex);
-            console.log('Owner of MyNFT', await MyNFT.ownerOf(loanTermIndex));
-            expect(await MyNFT.ownerOf(loanTermIndex)).to.equal(LoanTerm.address);
+            let tokenId = 0;
+            await MyNFT.connect(borrower).approve(LoanTerm.address, tokenId);
+            await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, tokenId);
+            console.log('Owner of MyNFT', await MyNFT.ownerOf(tokenId));
+            expect(await MyNFT.ownerOf(tokenId)).to.equal(LoanTerm.address);
         });
 
         it('approve and lend', async () => {
@@ -273,7 +274,7 @@ describe('Simple P2P Loan', () => {
              ({ USDToken, MyNFT } = await deployToken());
          });
 
-         it('create term and deposit collateral', async () => {
+         it('create and activate the loan term', async () => {
 
              await LoanTermFactory.createLoanTerm(
                               USDToken.address,
@@ -289,14 +290,82 @@ describe('Simple P2P Loan', () => {
              console.log("Loan Term Address: ", loanTermAddress);
              LoanTerm = await hre.ethers.getContractAt("SimpleP2PLoanTerm", loanTermAddress);
 
-             await MyNFT.connect(borrower).approve(LoanTerm.address, loanTermIndex);
-             await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, loanTermIndex);
-             console.log('Owner of MyNFT', await MyNFT.ownerOf(loanTermIndex));
-             expect(await MyNFT.ownerOf(loanTermIndex)).to.equal(LoanTerm.address);
+             let tokenId = 0;
+             await MyNFT.connect(borrower).approve(LoanTerm.address, tokenId);
+             await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, tokenId);
+             console.log('Owner of MyNFT', await MyNFT.ownerOf(tokenId));
+             expect(await MyNFT.ownerOf(tokenId)).to.equal(LoanTerm.address);
+
+             await LoanTerm.connect(lender).approveLoanTerm();
+             await USDToken.connect(lender).approve(LoanTerm.address, ethers.constants.MaxUint256);
+             await LoanTerm.connect(lender).lend();
+
          });
 
          it('Cancel Borrowing', async () => {
-             //TODO: check status, NFT redemption, fund return
+
+             let tokenId = (await LoanTerm.collateral()).tokenId;
+             console.log('Owner of MyNFT', await MyNFT.ownerOf(tokenId));
+             console.log('USDToken balance of loan contract: ', await USDToken.balanceOf(LoanTerm.address));
+             console.log('Status: ', await LoanTerm.status());
+             await LoanTerm.connect(borrower).cancelBorrowing();
+             console.log('Owner of MyNFT', await MyNFT.ownerOf(tokenId));
+             expect(await MyNFT.ownerOf(tokenId)).to.equal(borrower.address);
+             console.log('USDToken balance of loan contract: ', await USDToken.balanceOf(LoanTerm.address));
+             expect(await USDToken.balanceOf(LoanTerm.address)).to.be.equal(ethers.utils.parseEther("0"));
+             expect(await LoanTerm.status()).to.be.equal(LoanStatus.Cancelled);
+
+         });
+
+         it('create and activate another loan term', async () => {
+
+              await LoanTermFactory.createLoanTerm(
+                               USDToken.address,
+                               ethers.utils.parseEther("100000"),
+                               SECONDS_IN_A_WEEK * 20, //20 weeks
+                               1000, //10%
+                               borrower.address,
+                               lender.address);
+
+              let loanTermsLength = await LoanTermFactory.getLoanTermsLength();
+              let loanTermIndex = loanTermsLength - 1;
+              let loanTermAddress = await LoanTermFactory.loanTerms(loanTermIndex);
+              console.log("Loan Term Address: ", loanTermAddress);
+              LoanTerm = await hre.ethers.getContractAt("SimpleP2PLoanTerm", loanTermAddress);
+
+              let tokenId = 0;
+              await MyNFT.connect(borrower).approve(LoanTerm.address, tokenId);
+              await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, tokenId);
+              console.log('Owner of MyNFT', await MyNFT.ownerOf(tokenId));
+              expect(await MyNFT.ownerOf(tokenId)).to.equal(LoanTerm.address);
+
+              await LoanTerm.connect(lender).approveLoanTerm();
+              await USDToken.connect(lender).approve(LoanTerm.address, ethers.constants.MaxUint256);
+              await LoanTerm.connect(lender).lend();
+
+              await LoanTerm.connect(borrower).startBorrowing();
+
+         });
+
+         it('Liquidation', async () => {
+              await time.increase(SECONDS_IN_A_WEEK * 21 );
+              //TODO: check status, NFT liquidation by admin, fund return
+              let tokenId = (await LoanTerm.collateral()).tokenId;
+              console.log('Owner of MyNFT: ', await MyNFT.ownerOf(tokenId));
+              console.log('USDToken balance of borrower: ', await USDToken.balanceOf(borrower.address));
+              console.log('Status: ', await LoanTerm.status());
+
+              await LoanTerm.connect(lender).claimPrincipal();
+              console.log('Owner of MyNFT: ', await MyNFT.ownerOf(tokenId));
+              //expect(await MyNFT.ownerOf(tokenId)).to.equal(deployer.address);
+              console.log('USDToken balance of borrower: ', await USDToken.balanceOf(borrower.address));
+              //expect(await USDToken.balanceOf(LoanTerm.address)).to.be.equal(ethers.utils.parseEther("0"));
+              console.log('Status: ', await LoanTerm.status());
+              expect(await LoanTerm.status()).to.be.equal(LoanStatus.Defaulted);
+
+              await LoanTerm.liquidateCollateral();
+              console.log('Owner of MyNFT: ', await MyNFT.ownerOf(tokenId));
+              expect(await MyNFT.ownerOf(tokenId)).to.equal(deployer.address);
 
 
          });
