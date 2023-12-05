@@ -7,13 +7,14 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "./interfaces/ISimpleP2PLoanTerm.sol";
+import "./interfaces/IP2PLoanTerm.sol";
 import "hardhat/console.sol";
 
 
 //At First, create simple P2P loan Term. This contract does not support cross chain but simply works on a single chain
 //TODO must implement {IERC721Receiver-onERC721Received} to accept collateral NFT
-contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
+//TODO add factory/chains field, onlyFactory modifier, withdrawCollateral public function with onlyFactory
+contract P2PLoanTerm is IP2PLoanTerm
 {
     using SafeERC20 for IERC20Metadata;
 
@@ -47,8 +48,10 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     LoanStatus public status;
     NFT public collateral;//TODO currently only support one NFT collateral. Multi-NFT collateral can be achieved by making this field as array.
 
-    /* ========== CONSTRUCTOR ========== */
+    address factory;
+    bool isCrossChain;
 
+    /* ========== CONSTRUCTOR ========== */
 
     constructor(
         address _token,
@@ -58,7 +61,8 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         address _borrower,
         address _lender,
         address _admin,
-        LoanStatus _status
+        LoanStatus _status,
+        bool _isCrossChain
     ) {
         require(_totalAmount > 0, "amount of loan should be positive");
         token = IERC20Metadata(_token);
@@ -74,6 +78,8 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         principal = 0;
         claimedInterest = 0;
         lastCheckAccruedInterest = 0;
+        factory = msg.sender;
+        isCrossChain = _isCrossChain;
     }
 
     /* ========== VIEWS ========== */
@@ -88,7 +94,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         // * currentPrincipal() + lastCheckAccruedInterest
         // change the calculate order in order to prevent some value is rounded to 0 in process.
         uint256 amount = (latestTime - lastCheckTime) * currentPrincipal() * interestRate / (SECONDS_IN_A_YEAR * DENOMINATOR)
-                            + lastCheckAccruedInterest;
+            + lastCheckAccruedInterest;
         return amount;
     }
 
@@ -142,7 +148,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         }
     }
 
-    function approveLoanTerm() external onlyLender {
+    function approveLoanTerm() external onlyLender payable {
         require(status == LoanStatus.Created, "already approved");
         status = LoanStatus.Activated;
         emit ApproveLoanTerm();
@@ -243,7 +249,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     }
 
 
-    function redeemFullPrincipal() external onlyBorrower {
+    function redeemFullPrincipal() external onlyBorrower payable {
         require(status == LoanStatus.Started, "loan term has not started yet");
         uint256 amount = currentPrincipal();
         token.transferFrom(msg.sender, address(this), amount);
@@ -304,6 +310,12 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         emit LiquidateCollateral(borrower, collateral.owner, collateral.tokenId);
     }
 
+    /* ========== Factory FUNCTIONS ========== */
+    function withdrawCollateral() external onlyFactory {
+        require(status == LoanStatus.Delegated, "This loan is not delegated");
+        _withdrawCollateral(borrower);
+    }
+
     /* ========== MODIFIERS ========== */
     modifier onlyBorrower() {
         require(msg.sender == borrower, "not borrower");
@@ -317,6 +329,11 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "not admin");
+        _;
+    }
+
+    modifier onlyFactory() {
+        require(msg.sender == factory, "not factory");
         _;
     }
 

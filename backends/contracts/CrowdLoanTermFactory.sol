@@ -21,8 +21,8 @@ contract CrowdLoanTermFactory is CCIPHandler {
     //the element will be added when activateLoanTerm cross chain function is executed.
     mapping(address => MasterTerm) masterTerms;
 
-    event MessageSent(bytes32 messageId);
-    event MessageReceived(bytes32 messageId, uint64 sourceChainSelector, address sender, bytes data);
+//    event MessageSent(bytes32 messageId);
+//    event MessageReceived(bytes32 messageId, uint64 sourceChainSelector, address sender, bytes data);
 
     constructor(address router, address link, uint64 _chainSelector) CCIPHandler(router, link) {
         admin = msg.sender;

@@ -9,6 +9,10 @@ interface ICCIPHandler {
         LINK
     }
 
+    event MessageSent(bytes32 messageId);
+
+    event MessageReceived(bytes32 messageId, uint64 sourceChainSelector, address sender, bytes data);
+
     function sourceSender(uint64 chainSelector) external view returns (address);
 
     function updateSourceSender(uint64 chainSelector, address messenger) external;
