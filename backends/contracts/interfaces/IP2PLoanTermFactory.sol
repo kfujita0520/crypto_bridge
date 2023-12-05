@@ -28,6 +28,7 @@ interface IP2PLoanTermFactory is ICCIPHandler {
         uint64 interestRate,
         address borrower,
         address lender,
+        PayFeesIn _payFeesIn,
         uint64 executionChainSelector
     ) external returns(uint index);
 
@@ -37,7 +38,7 @@ interface IP2PLoanTermFactory is ICCIPHandler {
         address token,
         uint256 totalAmount,
         uint256 maturityPeriod,
-        uint8 interestRate,
+        uint64 interestRate,
         address borrower,
         address lender,
         PayFeesIn payFeesIn

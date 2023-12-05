@@ -7,7 +7,7 @@ import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/IAccessControl.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
-import "hardhat/console.sol";
+//import "hardhat/console.sol";
 import "./interfaces/ICCIPHandler.sol";
 
 /// @title CCIPHandler - Base contract for CCIP applications that can receive messages.
