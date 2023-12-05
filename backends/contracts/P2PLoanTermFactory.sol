@@ -34,7 +34,7 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         uint64 _executionChainSelector
     ) public returns(uint index){
 
-        bool isCrossChain = (_executionChainSelector == chainSelector);
+        bool isCrossChain = (_executionChainSelector != chainSelector);
         P2PLoanTerm loanTerm = new P2PLoanTerm(
             _token,//if isCrossChain = true, token address should be the one on execution chain.
             _totalAmount,

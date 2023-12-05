@@ -28,10 +28,9 @@ const enum LoanStatus {
     Defaulted = 7
 }
 
-
+let networkName = "polygonMumbai";
 
 async function deployLoanTermFactory() {
-  let networkName = "polygonMumbai";
   const [deployer, borrower, lender] = await hardhat.ethers.getSigners() as SignerWithAddress[];
 
   console.log(getRouterConfig(networkName).address);
