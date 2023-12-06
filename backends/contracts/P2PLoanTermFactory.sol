@@ -72,7 +72,9 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
     ) public payable {
 
         uint64 destinationChainSelector = executionChains[msg.sender];
-        require(destinationChainSelector != 0, "caller is not loanTerm contract");
+        if(securityMode){
+            require(destinationChainSelector != 0, "caller is not loanTerm contract");
+        }
         address receiver = sourceSender[destinationChainSelector];
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver), //receiver should be Factory contract on destination chain?
@@ -102,7 +104,9 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
     ) public payable {
 
         MasterTerm memory masterTerm = masterTerms[msg.sender];
-        require(masterTerm.chainSelector != 0, "caller is not loanTerm contract");
+        if(securityMode){
+            require(masterTerm.chainSelector != 0, "caller is not loanTerm contract");
+        }
         uint64 destinationChainSelector = masterTerm.chainSelector;
         address receiver = sourceSender[destinationChainSelector];
 
@@ -124,7 +128,9 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
     ) public payable {
 
         MasterTerm memory masterTerm = masterTerms[msg.sender];
-        require(masterTerm.chainSelector != 0, "caller is not loanTerm contract");
+        if(securityMode){
+            require(masterTerm.chainSelector != 0, "caller is not loanTerm contract");
+        }
         uint64 destinationChainSelector = masterTerm.chainSelector;
         address receiver = sourceSender[destinationChainSelector];
 
@@ -146,7 +152,6 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         Client.Any2EVMMessage memory message
     ) internal override {
         address srcSender = abi.decode(message.sender, (address));
-
         (bool success,) = address(this).call(message.data);
         require(success);
         emit MessageReceived(message.messageId, message.sourceChainSelector, srcSender, message.data);
@@ -156,7 +161,7 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         address _token,
         uint256 _totalAmount,
         uint256 _maturityPeriod,
-        uint8 _interestRate,
+        uint64 _interestRate,
         address _borrower,
         address _lender,
         PayFeesIn _payFeesIn,
@@ -204,6 +209,8 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         IP2PLoanTerm(_loanTerm).liquidateCollateral();
 
     }
+
+    receive() external payable {}
 
 
     /* ========== MODIFIERS ========== */

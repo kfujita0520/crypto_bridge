@@ -4,12 +4,11 @@ pragma solidity ^0.8.19;
 //import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-//import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/IP2PLoanTerm.sol";
 import "./interfaces/IP2PLoanTermFactory.sol";
-//import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 
 //At First, create simple P2P loan Term. This contract does not support cross chain but simply works on a single chain
@@ -155,10 +154,13 @@ contract P2PLoanTerm is IP2PLoanTerm
     function approveLoanTerm() external onlyLender payable {
         require(status == LoanStatus.Created, "already approved");
         if (isCrossChain) {
+            //TODO should send ETH if payFeesIn is native
             IP2PLoanTermFactory(factory).activateLoanTermRequest(address(token), totalAmount, maturityPeriod,
                     interestRate, borrower, lender, payFeesIn);
+            status = LoanStatus.Delegated;
+        } else {
+            status = LoanStatus.Activated;
         }
-        status = LoanStatus.Activated;
         emit ApproveLoanTerm();
     }
 

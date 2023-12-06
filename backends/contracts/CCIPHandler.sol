@@ -7,8 +7,9 @@ import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/IAccessControl.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
-//import "hardhat/console.sol";
 import "./interfaces/ICCIPHandler.sol";
+import "hardhat/console.sol";
+
 
 /// @title CCIPHandler - Base contract for CCIP applications that can receive messages.
 abstract contract CCIPHandler is IERC165, AccessControl, ICCIPHandler {
@@ -16,11 +17,6 @@ abstract contract CCIPHandler is IERC165, AccessControl, ICCIPHandler {
     address immutable i_link;
     bool public securityMode = false;//test purpose. In production, this is always true.
     mapping(uint64 => address) public sourceSender;
-
-//    enum PayFeesIn {
-//        Native,
-//        LINK
-//    }
 
     constructor(address router, address link) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);

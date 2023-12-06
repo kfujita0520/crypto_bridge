@@ -88,6 +88,91 @@ describe('P2P Loan', () => {
         console.log('Lender: ', lender.address);
     });
 
+    //Cancel, failed redemption
+    describe('Cross chain Loan', () => {
+         let LoanTerm: LoanTerm;
+         let USDToken: USDToken;
+         let MyNFT: MyNFT;
+         let CCIPReceiveTester;
+
+         before(async ()=>{
+             ({ USDToken, MyNFT } = await deployToken());
+             const CCIPReceiveTesterContract = await ethers.getContractFactory("CCIPReceiveTester");
+             CCIPReceiveTester = await CCIPReceiveTesterContract.deploy(LoanTermFactory.address);
+             await CCIPReceiveTester.deployed();
+             console.log(`CCIPReceiveTester is deployed to ${CCIPReceiveTester.address}`);
+         });
+
+         it('create and activate the loan term', async () => {
+             let exeNetworkName = "ethereumSepolia";
+             //set mock factory address of destination chain for testing purpose.
+             await LoanTermFactory.updateSourceSender(getRouterConfig(exeNetworkName).chainSelector, LoanTermFactory.address);
+             await LoanTermFactory.createLoanTerm(
+                                          USDToken.address,
+                                          ethers.utils.parseEther("100000"),
+                                          SECONDS_IN_A_WEEK * 20, //20 weeks
+                                          1000, //10%
+                                          borrower.address,
+                                          lender.address,
+                                          PayFeesIn.Native,
+                                          getRouterConfig(exeNetworkName).chainSelector);
+
+             let loanTermsLength = await LoanTermFactory.getLoanTermsLength();
+             let loanTermIndex = loanTermsLength - 1;
+             let loanTermAddress = await LoanTermFactory.loanTerms(loanTermIndex);
+             console.log("Loan Term Address: ", loanTermAddress);
+             LoanTerm = await hre.ethers.getContractAt("P2PLoanTerm", loanTermAddress);
+
+             let tokenId = 0;
+             await MyNFT.connect(borrower).approve(LoanTerm.address, tokenId);
+             await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, tokenId);
+             console.log('Owner of MyNFT', await MyNFT.ownerOf(tokenId));
+             expect(await MyNFT.ownerOf(tokenId)).to.equal(LoanTerm.address);
+
+             let transaction = {
+                     to: LoanTermFactory.address,
+                     value: ethers.utils.parseEther("10") // Convert Ether to Wei
+             };
+             let tx = await deployer.sendTransaction({to: LoanTermFactory.address,value: ethers.utils.parseEther("10")});
+             let receipt = await tx.wait();
+             console.log(`Transaction ${receipt.transactionHash} mined in block ${receipt.blockNumber}`);
+
+             await LoanTerm.connect(lender).approveLoanTerm();
+             await USDToken.connect(lender).approve(LoanTerm.address, ethers.constants.MaxUint256);
+             expect(LoanTerm.connect(lender).lend()).to.be.revertedWith('cannot loan in current status');
+
+         });
+
+         it('ReceiveTest', async () => {
+            let exeNetworkName = "ethereumSepolia";
+            let messageId = ethers.utils.arrayify("0xcc80c859529f7a604f4d24e7eccb1575f65d1cf9a4454ca126d97f2c970d2dc9");
+            let sourceChainSelector = getRouterConfig(exeNetworkName).chainSelector;//'16015286601757825753';
+            let sourceSender = getRouterConfig(exeNetworkName).address;//"0x21f76DCF80cc2c180B3303dC6D89Cc1eda25AC7f";
+            let loanTerm = {
+                token: USDToken.address,
+                totalAmount: ethers.utils.parseEther("100000"),
+                maturityPeriod: SECONDS_IN_A_WEEK * 20, // Replace with actual value
+                interestRate: 1000, // Replace with actual value
+                borrower: borrower.address,
+                lender: lender.address,
+                payFeesIn: PayFeesIn.Native // Replace with actual value
+            };
+
+            await CCIPReceiveTester.activateLoanTermTest(
+                messageId,
+                sourceChainSelector,
+                sourceSender,
+                loanTerm
+            );
+
+            await CCIPReceiveTester.notifyRedemptionTest(messageId, sourceChainSelector, sourceSender, LoanTerm.address);
+
+
+         });
+
+
+     });
+
 
 
     describe('Normal Lending Flow', () => {
@@ -345,7 +430,7 @@ describe('P2P Loan', () => {
 
          it('Liquidation', async () => {
               await time.increase(SECONDS_IN_A_WEEK * 21 );
-              //TODO: check status, NFT liquidation by admin, fund return
+
               let tokenId = (await LoanTerm.collateral()).tokenId;
               console.log('Owner of MyNFT: ', await MyNFT.ownerOf(tokenId));
               console.log('USDToken balance of borrower: ', await USDToken.balanceOf(borrower.address));
