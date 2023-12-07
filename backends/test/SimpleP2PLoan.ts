@@ -73,7 +73,7 @@ async function deployToken() {
   await USDToken.transfer(borrower.address, ethers.utils.parseEther("10000"));
 
   const MyNFTContract = await ethers.getContractFactory("MyNFT");
-  const MyNFT = await MyNFTContract.connect(borrower).deploy();
+  const MyNFT = await MyNFTContract.deploy();
   await MyNFT.deployed();
   console.log(`MyNFT is deployed to ${MyNFT.address}`);
 
@@ -125,7 +125,8 @@ describe('Simple P2P Loan', () => {
             console.log("Loan Term Address: ", loanTermAddress);
             LoanTerm = await hre.ethers.getContractAt("SimpleP2PLoanTerm", loanTermAddress);
 
-            let tokenId = 0;
+            await MyNFT.safeMint(borrower.address);
+            let tokenId = await MyNFT.nextTokenId() - 1 ;
             await MyNFT.connect(borrower).approve(LoanTerm.address, tokenId);
             await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, tokenId);
             console.log('Owner of MyNFT', await MyNFT.ownerOf(tokenId));
@@ -290,7 +291,8 @@ describe('Simple P2P Loan', () => {
              console.log("Loan Term Address: ", loanTermAddress);
              LoanTerm = await hre.ethers.getContractAt("SimpleP2PLoanTerm", loanTermAddress);
 
-             let tokenId = 0;
+             await MyNFT.safeMint(borrower.address);
+             let tokenId = await MyNFT.nextTokenId() - 1 ;
              await MyNFT.connect(borrower).approve(LoanTerm.address, tokenId);
              await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, tokenId);
              console.log('Owner of MyNFT', await MyNFT.ownerOf(tokenId));
@@ -333,7 +335,8 @@ describe('Simple P2P Loan', () => {
               console.log("Loan Term Address: ", loanTermAddress);
               LoanTerm = await hre.ethers.getContractAt("SimpleP2PLoanTerm", loanTermAddress);
 
-              let tokenId = 0;
+              await MyNFT.safeMint(borrower.address);
+              let tokenId = await MyNFT.nextTokenId() - 1 ;
               await MyNFT.connect(borrower).approve(LoanTerm.address, tokenId);
               await LoanTerm.connect(borrower).depositNFTCollateral(MyNFT.address, tokenId);
               console.log('Owner of MyNFT', await MyNFT.ownerOf(tokenId));

@@ -30,18 +30,20 @@ const config: HardhatUserConfig = {
       // },
       forking: {
         url: process.env.POLYGON_MUMBAI_RPC_URL !== undefined ? process.env.POLYGON_MUMBAI_RPC_URL : '', // replace with your Infura project ID
-        blockNumber: 42776725, // replace with the block number you want to fork from
+        blockNumber: 43293628, // replace with the block number you want to fork from
       },
     },
     ethereumSepolia: {
       url: process.env.ETHEREUM_SEPOLIA_RPC_URL !== undefined ? process.env.ETHEREUM_SEPOLIA_RPC_URL : '',
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: process.env.PRIVATE_KEY !== undefined && process.env.PRIVATE_KEY2 !== undefined ?
+          [process.env.PRIVATE_KEY, process.env.PRIVATE_KEY2] : [],
       chainId: 11155111,
       gas: 12000000
     },
     polygonMumbai: {
       url: process.env.POLYGON_MUMBAI_RPC_URL !== undefined ? process.env.POLYGON_MUMBAI_RPC_URL : '',
-      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      accounts: process.env.PRIVATE_KEY !== undefined && process.env.PRIVATE_KEY2 !== undefined ?
+          [process.env.PRIVATE_KEY, process.env.PRIVATE_KEY2] : [],
       chainId: 80001
     },
     // optimismGoerli: {
