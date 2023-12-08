@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.19;
 
-interface ISimpleP2PLoanTerm {
+interface IP2PLoanTerm {
 
     enum LoanStatus {
         Created,  //initial term creation
         Activated,  //collateral is deposited
+        Delegated,  //loan execution is delegated to execution chain
         Started, //lenders offered target amount and ready to borrow
         Redeemed, //borrower complete redemption of loan
         Completed, // all lender has collected their principal and eligible interest
@@ -44,16 +45,20 @@ interface ISimpleP2PLoanTerm {
     function lend() external;
     function loanTransfer(address beneficiary) external;
     function claimInterest() external;
-    function approveLoanTerm() external;
+    function approveLoanTerm() external payable;
     function claimPrincipal() external;
 
     /* ========== Borrower FUNCTIONS ========== */
     function depositNFTCollateral(address owner, uint256 tokenId) external;
     function cancelBorrowing() external;
     function startBorrowing() external;
-    function redeemFullPrincipal() external;
+    function redeemFullPrincipal() external payable;
     function redeemPartialPrincipal(uint256 amount) external;
 
     /* ========== Admin FUNCTIONS ========== */
     function liquidateCollateral() external;
+
+    /* ========== Factory FUNCTIONS ========== */
+    function withdrawCollateral() external;
+
 }

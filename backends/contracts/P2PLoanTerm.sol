@@ -4,16 +4,18 @@ pragma solidity ^0.8.19;
 //import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
-import "./interfaces/ISimpleP2PLoanTerm.sol";
+import "./interfaces/IP2PLoanTerm.sol";
+import "./interfaces/IP2PLoanTermFactory.sol";
 import "hardhat/console.sol";
 
 
 //At First, create simple P2P loan Term. This contract does not support cross chain but simply works on a single chain
 //TODO must implement {IERC721Receiver-onERC721Received} to accept collateral NFT
-contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
+//TODO add chains field
+//TODO add PayFeeIn field for payment token. then remove the fee argument from activate and notify Request function
+contract P2PLoanTerm is IP2PLoanTerm
 {
     using SafeERC20 for IERC20Metadata;
 
@@ -47,8 +49,11 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     LoanStatus public status;
     NFT public collateral;//TODO currently only support one NFT collateral. Multi-NFT collateral can be achieved by making this field as array.
 
-    /* ========== CONSTRUCTOR ========== */
+    address public factory;
+    bool public isCrossChain;
+    IP2PLoanTermFactory.PayFeesIn public payFeesIn;
 
+    /* ========== CONSTRUCTOR ========== */
 
     constructor(
         address _token,
@@ -58,7 +63,9 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         address _borrower,
         address _lender,
         address _admin,
-        LoanStatus _status
+        LoanStatus _status,
+        bool _isCrossChain,
+        IP2PLoanTermFactory.PayFeesIn _payFeesIn
     ) {
         require(_totalAmount > 0, "amount of loan should be positive");
         token = IERC20Metadata(_token);
@@ -74,6 +81,9 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         principal = 0;
         claimedInterest = 0;
         lastCheckAccruedInterest = 0;
+        factory = msg.sender;
+        isCrossChain = _isCrossChain;
+        payFeesIn = _payFeesIn;
     }
 
     /* ========== VIEWS ========== */
@@ -88,7 +98,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         // * currentPrincipal() + lastCheckAccruedInterest
         // change the calculate order in order to prevent some value is rounded to 0 in process.
         uint256 amount = (latestTime - lastCheckTime) * currentPrincipal() * interestRate / (SECONDS_IN_A_YEAR * DENOMINATOR)
-                            + lastCheckAccruedInterest;
+            + lastCheckAccruedInterest;
         return amount;
     }
 
@@ -111,7 +121,6 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         principal = totalAmount;
         emit Lend(msg.sender, principal);
     }
-
 
     function loanTransfer(address beneficiary) external onlyLender  {
         lender = beneficiary;
@@ -142,13 +151,18 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         }
     }
 
-    function approveLoanTerm() external onlyLender {
+    function approveLoanTerm() external onlyLender payable {
         require(status == LoanStatus.Created, "already approved");
-        status = LoanStatus.Activated;
+        if (isCrossChain) {
+            //TODO should send ETH if payFeesIn is native
+            IP2PLoanTermFactory(factory).activateLoanTermRequest(address(token), totalAmount, maturityPeriod,
+                    interestRate, borrower, lender, payFeesIn);
+            status = LoanStatus.Delegated;
+        } else {
+            status = LoanStatus.Activated;
+        }
         emit ApproveLoanTerm();
     }
-
-
 
     //This function is called
     //1. after when borrower made a partial redemption
@@ -185,7 +199,6 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         }
 
     }
-
 
     function _withdrawPrincipal() internal {
         uint256 amount = withdrawablePrincipal();
@@ -243,7 +256,7 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     }
 
 
-    function redeemFullPrincipal() external onlyBorrower {
+    function redeemFullPrincipal() external onlyBorrower payable {
         require(status == LoanStatus.Started, "loan term has not started yet");
         uint256 amount = currentPrincipal();
         token.transferFrom(msg.sender, address(this), amount);
@@ -259,7 +272,12 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
         emit RedeemPrincipal(msg.sender, amount);
 
         require(status == LoanStatus.Redeemed, "loan is not redeemed yet");
-        _withdrawCollateral(borrower);
+        if (isCrossChain) {
+            IP2PLoanTermFactory(factory).notifyRedemptionRequest(payFeesIn);
+        } else {
+            _withdrawCollateral(borrower);
+        }
+
     }
 
     function _redeemInterest() internal {
@@ -299,9 +317,19 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
     /* ========== Admin FUNCTIONS ========== */
     function liquidateCollateral() external onlyAdmin {
         require(status == LoanStatus.Defaulted, "The loan is not default");
-
+        //TODO cross chain message is needed.
         _withdrawCollateral(admin);
         emit LiquidateCollateral(borrower, collateral.owner, collateral.tokenId);
+    }
+
+    function updatePayFeesIn(IP2PLoanTermFactory.PayFeesIn _payFeesIn) external onlyStakeholder {
+        payFeesIn = _payFeesIn;
+    }
+
+    /* ========== Factory FUNCTIONS ========== */
+    function withdrawCollateral() external onlyFactory {
+        require(status == LoanStatus.Delegated, "This loan is not delegated");
+        _withdrawCollateral(borrower);
     }
 
     /* ========== MODIFIERS ========== */
@@ -317,6 +345,16 @@ contract SimpleP2PLoanTerm is ISimpleP2PLoanTerm
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "not admin");
+        _;
+    }
+
+    modifier onlyFactory() {
+        require(msg.sender == factory, "not factory");
+        _;
+    }
+
+    modifier onlyStakeholder() {
+        require(msg.sender == borrower || msg.sender == lender || msg.sender == admin, "Only admin or borrower can call this function");
         _;
     }
 

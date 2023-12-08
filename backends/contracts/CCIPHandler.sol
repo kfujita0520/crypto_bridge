@@ -2,25 +2,21 @@
 pragma solidity ^0.8.19;
 
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import {IAny2EVMMessageReceiver} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
 import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/IAccessControl.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
+import "./interfaces/ICCIPHandler.sol";
 import "hardhat/console.sol";
 
+
 /// @title CCIPHandler - Base contract for CCIP applications that can receive messages.
-abstract contract CCIPHandler is IAny2EVMMessageReceiver, IERC165, AccessControl {
+abstract contract CCIPHandler is IERC165, AccessControl, ICCIPHandler {
     address immutable i_router;
     address immutable i_link;
     bool public securityMode = false;//test purpose. In production, this is always true.
     mapping(uint64 => address) public sourceSender;
-
-    enum PayFeesIn {
-        Native,
-        LINK
-    }
 
     constructor(address router, address link) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -34,7 +30,7 @@ abstract contract CCIPHandler is IAny2EVMMessageReceiver, IERC165, AccessControl
     /// @param interfaceId The interfaceId to check
     /// @return true if the interfaceId is supported
     function supportsInterface(bytes4 interfaceId) public pure virtual override(AccessControl, IERC165) returns (bool) {
-        return interfaceId == type(IAny2EVMMessageReceiver).interfaceId || interfaceId == type(IERC165).interfaceId ||
+        return interfaceId == type(ICCIPHandler).interfaceId || interfaceId == type(IERC165).interfaceId ||
             interfaceId == type(IAccessControl).interfaceId;
     }
 
@@ -55,7 +51,7 @@ abstract contract CCIPHandler is IAny2EVMMessageReceiver, IERC165, AccessControl
         _;
     }
 
-    /// @inheritdoc IAny2EVMMessageReceiver
+    /// @inheritdoc ICCIPHandler
     function ccipReceive(Client.Any2EVMMessage calldata message) external virtual override onlyRouter {
         address srcSender = abi.decode(message.sender, (address));
         if(securityMode){
