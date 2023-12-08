@@ -24,14 +24,14 @@ const config: HardhatUserConfig = {
     hardhat: {
       allowUnlimitedContractSize: true,
       chainId: 31337,
-      // forking: {
-      //   url: process.env.ETHEREUM_SEPOLIA_RPC_URL !== undefined ? process.env.ETHEREUM_SEPOLIA_RPC_URL : '', // replace with your Infura project ID
-      //   blockNumber: 4721700, // replace with the block number you want to fork from
-      // },
       forking: {
-        url: process.env.POLYGON_MUMBAI_RPC_URL !== undefined ? process.env.POLYGON_MUMBAI_RPC_URL : '', // replace with your Infura project ID
-        blockNumber: 43293628, // replace with the block number you want to fork from
+        url: process.env.ETHEREUM_SEPOLIA_RPC_URL !== undefined ? process.env.ETHEREUM_SEPOLIA_RPC_URL : '', // replace with your Infura project ID
+        blockNumber: 4841158, // replace with the block number you want to fork from
       },
+      // forking: {
+      //   url: process.env.POLYGON_MUMBAI_RPC_URL !== undefined ? process.env.POLYGON_MUMBAI_RPC_URL : '', // replace with your Infura project ID
+      //   blockNumber: 43293628, // replace with the block number you want to fork from
+      // },
     },
     ethereumSepolia: {
       url: process.env.ETHEREUM_SEPOLIA_RPC_URL !== undefined ? process.env.ETHEREUM_SEPOLIA_RPC_URL : '',
@@ -40,6 +40,13 @@ const config: HardhatUserConfig = {
       chainId: 11155111,
       gas: 12000000
     },
+    // sepolia: {
+    //   url: process.env.ETHEREUM_SEPOLIA_RPC_URL !== undefined ? process.env.ETHEREUM_SEPOLIA_RPC_URL : '',
+    //   accounts: process.env.PRIVATE_KEY !== undefined && process.env.PRIVATE_KEY2 !== undefined ?
+    //       [process.env.PRIVATE_KEY, process.env.PRIVATE_KEY2] : [],
+    //   chainId: 11155111,
+    //   gas: 12000000
+    // },
     polygonMumbai: {
       url: process.env.POLYGON_MUMBAI_RPC_URL !== undefined ? process.env.POLYGON_MUMBAI_RPC_URL : '',
       accounts: process.env.PRIVATE_KEY !== undefined && process.env.PRIVATE_KEY2 !== undefined ?
@@ -61,6 +68,23 @@ const config: HardhatUserConfig = {
     //   accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     //   chainId: 43113
     // }
+  },
+  etherscan: {
+    customChains: [
+      {
+        network: "ethereumSepolia",
+        chainId: 11155111,
+        urls: {
+          apiURL: "https://api-sepolia.etherscan.io/api",
+          browserURL: "https://sepolia.etherscan.io"
+        }
+      }
+    ],
+    apiKey: {
+      polygonMumbai: process.env.POLYGONSCAN_API_KEY || '',
+      //sepolia: process.env.ETHERSCAN_API_KEY || '',
+      ethereumSepolia: process.env.ETHERSCAN_API_KEY || '',
+    },
   },
 };
 
