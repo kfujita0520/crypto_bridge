@@ -9,21 +9,26 @@ then the rest of transaction tasks for loan execution and repayment will be dele
 The loan flow of our system will be like following chart.
 ![loan_flow.png](docs/img/loan_flow.png)
 
-T.B.D. (Explain the rational to identify the place to apply CCIP function)
+Since cross chain message takes some time to complete due to necessity of waiting for the transaction finality, 
+this should not be applied on time-sensitive or frequently used operations.   
+We identify the use case for coordinating locked collateral and loan fund repayment status.
+This is not time-sensitive and happened only limited number for each loan term process. 
 
 ## Architecture
 The contract architecture with Chainlink CCIP is  shown in the diagram below.
 
-T.B.D. (Attache some chart)
+![architecture.png](docs/img/architecture.png)
 
 - CCIP Router   
-This contract is the contact point of CCIP system. All messages are handled by this contract.
+This contract is the contact point of Chainlink CCIP system. All messages are handled by this contract.
 - P2PLoanTermFactory
-This contract has two features. One is CCIP Handler feature which will acts as contact point to CCIP Router.
-All messages from our system will be handled through this contract.
-Another is factory feature which create Loan Term contract depends on new feature. 
-- P2PLoanTerm
-
+This contract has two features. One is CCIP Handler which acts as contact point to/from CCIP Router.
+All CCIP messages of our system will be handled through this single contract.
+Another feature is factory which create Loan Term contract upon request.
+The factory manage the relationship between master chain and execution chain for each Loan Term and facilitate/validate the cross-chain message requests.
+- P2PLoanTerm  
+Individual Loan Term contract interacting with each borrower and lender pair for locking NFT collateral 
+or facilitating with lending and redeeming operation
 
 
 
@@ -52,3 +57,4 @@ npx hardhat verify --network ethereumSepolia --constructor-args ./scripts/verify
 ```
 
 ## Findings
+T.B.D.
