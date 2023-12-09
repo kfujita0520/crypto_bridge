@@ -7,7 +7,7 @@ async function main() {
     let networkName = hre.network.name;
 
     //this configuration should be updated after deploying factory contract on both chains.
-    let polygonFactory = "0xDB5b67aa5A54606808F19594Fad621a60311C7fe";
+    let polygonFactory = "0xD9621594289fABC0448EF614f05e13E21158B1d4";
     let etherFactory = "0xe6ddA0C101841907c617D98B11a43D9c4e21e8e3";
     let LoanTermFactory;
     if (networkName == "polygonMumbai"){
