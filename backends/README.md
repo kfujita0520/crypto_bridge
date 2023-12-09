@@ -21,7 +21,7 @@ The contract architecture with Chainlink CCIP is  shown in the diagram below.
 
 - CCIP Router   
 This contract is the contact point of Chainlink CCIP system. All messages are handled by this contract.
-- P2PLoanTermFactory
+- P2PLoanTermFactory  
 This contract has two features. One is CCIP Handler which acts as contact point to/from CCIP Router.
 All CCIP messages of our system will be handled through this single contract.
 Another feature is factory which create Loan Term contract upon request.

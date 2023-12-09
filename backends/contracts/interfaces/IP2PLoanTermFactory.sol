@@ -32,7 +32,7 @@ interface IP2PLoanTermFactory is ICCIPHandler {
         uint64 executionChainSelector
     ) external returns(uint index);
 
-    function getP2PLoanTerm(uint index) external view returns (IP2PLoanTerm);
+    function getP2PLoanTerm(uint index) external view returns (address);
 
     function activateLoanTermRequest(
         address token,

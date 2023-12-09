@@ -53,8 +53,8 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         return loanTerms.length - 1;
     }
 
-    function getP2PLoanTerm(uint index) public view returns (IP2PLoanTerm) {
-        return loanTerms[index];
+    function getP2PLoanTerm(uint index) public view returns (address) {
+        return address(loanTerms[index]);
     }
 
     function getLoanTermsLength() public view returns (uint256) {
@@ -90,7 +90,9 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
                 msg.sender
             ),
             tokenAmounts: new Client.EVMTokenAmount[](0),
-            extraArgs: "",
+            extraArgs: Client._argsToBytes(
+                Client.EVMExtraArgsV1({gasLimit: 3_900_000, strict: false})
+            ),
             feeToken: _payFeesIn == PayFeesIn.LINK ? i_link : address(0)
         });
 
@@ -152,6 +154,7 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         Client.Any2EVMMessage memory message
     ) internal override {
         address srcSender = abi.decode(message.sender, (address));
+        emit MessageReceived(message.messageId, message.sourceChainSelector, srcSender, message.data);
         (bool success,) = address(this).call(message.data);
         require(success);
         emit MessageReceived(message.messageId, message.sourceChainSelector, srcSender, message.data);

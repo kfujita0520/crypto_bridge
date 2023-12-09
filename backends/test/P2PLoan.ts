@@ -28,7 +28,7 @@ const enum LoanStatus {
     Defaulted = 7
 }
 
-let networkName = "polygonMumbai";
+let networkName = "ethereumSepolia";
 
 async function deployLoanTermFactory() {
   const [deployer, borrower, lender] = await hardhat.ethers.getSigners() as SignerWithAddress[];
@@ -104,7 +104,7 @@ describe('P2P Loan', () => {
          });
 
          it('create and activate the loan term', async () => {
-             let exeNetworkName = "ethereumSepolia";
+             let exeNetworkName = "polygonMumbai";
              //set mock factory address of destination chain for testing purpose.
              await LoanTermFactory.updateSourceSender(getRouterConfig(exeNetworkName).chainSelector, LoanTermFactory.address);
              await LoanTermFactory.createLoanTerm(
@@ -145,7 +145,7 @@ describe('P2P Loan', () => {
          });
 
          it('ReceiveTest', async () => {
-            let exeNetworkName = "ethereumSepolia";
+            let exeNetworkName = "polygonMumbai";
             let messageId = ethers.utils.arrayify("0xcc80c859529f7a604f4d24e7eccb1575f65d1cf9a4454ca126d97f2c970d2dc9");
             let sourceChainSelector = getRouterConfig(exeNetworkName).chainSelector;//'16015286601757825753';
             let sourceSender = getRouterConfig(exeNetworkName).address;//"0x21f76DCF80cc2c180B3303dC6D89Cc1eda25AC7f";
