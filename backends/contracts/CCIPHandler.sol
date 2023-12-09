@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/IAccessControl.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 import "./interfaces/ICCIPHandler.sol";
+import {IAny2EVMMessageReceiver} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
 import "hardhat/console.sol";
 
 
@@ -17,6 +18,9 @@ abstract contract CCIPHandler is IERC165, AccessControl, ICCIPHandler {
     address immutable i_link;
     bool public securityMode = false;//test purpose. In production, this is always true.
     mapping(uint64 => address) public sourceSender;
+    // The message contents of failed messages are stored here.
+    mapping(bytes32 messageId => Client.Any2EVMMessage contents) public s_messageContents;
+
 
     constructor(address router, address link) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -30,7 +34,7 @@ abstract contract CCIPHandler is IERC165, AccessControl, ICCIPHandler {
     /// @param interfaceId The interfaceId to check
     /// @return true if the interfaceId is supported
     function supportsInterface(bytes4 interfaceId) public pure virtual override(AccessControl, IERC165) returns (bool) {
-        return interfaceId == type(ICCIPHandler).interfaceId || interfaceId == type(IERC165).interfaceId ||
+        return interfaceId == type(IAny2EVMMessageReceiver).interfaceId || interfaceId == type(IERC165).interfaceId ||
             interfaceId == type(IAccessControl).interfaceId;
     }
 
@@ -46,19 +50,30 @@ abstract contract CCIPHandler is IERC165, AccessControl, ICCIPHandler {
         securityMode = enable;
     }
 
-    modifier onlyAdmin(address user) {
-        require(hasRole(DEFAULT_ADMIN_ROLE, user), "Caller is not a admin");
-        _;
-    }
-
     /// @inheritdoc ICCIPHandler
     function ccipReceive(Client.Any2EVMMessage calldata message) external virtual override onlyRouter {
         address srcSender = abi.decode(message.sender, (address));
         if(securityMode){
             require(validateSourceSender(message.sourceChainSelector, srcSender), "the sender is unauthorized");
         }
+        try this.processReceive(message) {
+            // Intentionally empty in this example; no action needed if processMessage succeeds
+        } catch (bytes memory err) {
+            // Could set different error codes based on the caught error. Each could be
+            // handled differently.
+            s_messageContents[message.messageId] = message;
+            // Don't revert so CCIP doesn't revert. Emit event instead.
+            // The message can be retried later without having to do manual execution of CCIP.
+            emit MessageFailed(message.messageId, err);
+            return;
+        }
+    }
+
+    function processReceive(Client.Any2EVMMessage memory message) external onlySelf {
         _ccipReceive(message);
     }
+
+
 
     /// @notice Override this function in your implementation.
     /// @param message Any2EVMMessage
@@ -106,6 +121,17 @@ abstract contract CCIPHandler is IERC165, AccessControl, ICCIPHandler {
     }
 
     error InvalidRouter(address router);
+
+    /* ========== MODIFIERS ========== */
+    modifier onlySelf() {
+        require(msg.sender == address(this), "not through call function");
+        _;
+    }
+
+    modifier onlyAdmin(address user) {
+        require(hasRole(DEFAULT_ADMIN_ROLE, user), "Caller is not a admin");
+        _;
+    }
 
     /// @dev only calls from the set router are accepted.
     modifier onlyRouter() {

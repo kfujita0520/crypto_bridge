@@ -64,11 +64,24 @@ We need to have CCIP router, so that using hardhat forking network is required.
 
 ## Findings
 1. Gas limitation  
+
 The default gas limit for cross message handling is just 200,000. We need to specify the max limit by extraArgs parameter on EVM2AnyMessage.
 Our ActivateLoanTerm message required over 2,000,000 gas cost. So parameter configuration was required.  
-Also, if gas cost exceed over 2,000,000, it seems CCIP silently failed though the explorer shows it as "success". 
-That made us difficult to track the cause of problem.
 
-2. Function Signature with enum  
+2. Interface pre-check  
+
+On destination check CCIP router will perform pre-check if receiver contract will support a specific interface.
+the contract should implement following logic in suppotsInteface function.
+> interfaceId == type(IAny2EVMMessageReceiver).interfaceId || interfaceId == type(IERC165).interfaceId 
+
+I have overwrote ccipReceive function with my custom Interface, this would essentially support ccipReceive 
+But due to this, the pre-check of ccipRouter was failed and the message was not sent to receive contract.  
+Note that in case inteface pre-check was failed, CCIP explore will show "success" and silently finish the process. 
+
+3. Function Signature with enum 
+
 In function signature, if the parameters of function used enum type, needed to specify the actual data type of enum value.
 In our case, PayFeesIn struct argument data type should be specified as uint8. 
+
+
+Overall, there a couple of error-prone items which you could only find in live-net test, which took some effort and time to resolve it. 

@@ -216,12 +216,6 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
     receive() external payable {}
 
 
-    /* ========== MODIFIERS ========== */
-    modifier onlySelf() {
-        require(msg.sender == address(this), "not through call function");
-        _;
-    }
-
 
 
 }
