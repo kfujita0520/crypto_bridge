@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/IAccessControl.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
 import "./interfaces/ICCIPHandler.sol";
+import {IAny2EVMMessageReceiver} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
 import "hardhat/console.sol";
 
 
@@ -33,7 +34,7 @@ abstract contract CCIPHandler is IERC165, AccessControl, ICCIPHandler {
     /// @param interfaceId The interfaceId to check
     /// @return true if the interfaceId is supported
     function supportsInterface(bytes4 interfaceId) public pure virtual override(AccessControl, IERC165) returns (bool) {
-        return interfaceId == type(ICCIPHandler).interfaceId || interfaceId == type(IERC165).interfaceId ||
+        return interfaceId == type(IAny2EVMMessageReceiver).interfaceId || interfaceId == type(IERC165).interfaceId ||
             interfaceId == type(IAccessControl).interfaceId;
     }
 
