@@ -53,8 +53,8 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         return loanTerms.length - 1;
     }
 
-    function getP2PLoanTerm(uint index) public view returns (IP2PLoanTerm) {
-        return loanTerms[index];
+    function getP2PLoanTerm(uint index) public view returns (address) {
+        return address(loanTerms[index]);
     }
 
     function getLoanTermsLength() public view returns (uint256) {
@@ -78,7 +78,7 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         address receiver = sourceSender[destinationChainSelector];
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver), //receiver should be Factory contract on destination chain?
-            data: abi.encodeWithSignature("activateLoanTerm(address,uint256,uint256,uint64,address,address,PayFeesIn,uint64,address)",
+            data: abi.encodeWithSignature("activateLoanTerm(address,uint256,uint256,uint64,address,address,uint8,uint64,address)",
                 _token,
                 _totalAmount,
                 _maturityPeriod,
@@ -90,7 +90,9 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
                 msg.sender
             ),
             tokenAmounts: new Client.EVMTokenAmount[](0),
-            extraArgs: "",
+            extraArgs: Client._argsToBytes(
+                Client.EVMExtraArgsV1({gasLimit: 4_000_000, strict: false})
+            ),
             feeToken: _payFeesIn == PayFeesIn.LINK ? i_link : address(0)
         });
 
@@ -152,6 +154,7 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         Client.Any2EVMMessage memory message
     ) internal override {
         address srcSender = abi.decode(message.sender, (address));
+        emit MessageReceived(message.messageId, message.sourceChainSelector, srcSender, message.data);
         (bool success,) = address(this).call(message.data);
         require(success);
         emit MessageReceived(message.messageId, message.sourceChainSelector, srcSender, message.data);

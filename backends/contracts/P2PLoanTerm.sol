@@ -235,9 +235,16 @@ contract P2PLoanTerm is IP2PLoanTerm
 
     function cancelBorrowing() external onlyBorrower {
         require(status == LoanStatus.Activated, "borrower can cancel only before the loan starts");
-        _withdrawCollateral(borrower);
+        //refund token to lender
         if (principal > 0){
             token.safeTransfer(lender, principal);
+        }
+        //release collateral if any
+        if (isCrossChain) {
+            //TODO better to change the method name, but doing the same thing.
+            IP2PLoanTermFactory(factory).notifyRedemptionRequest(payFeesIn);
+        } else {
+            _withdrawCollateral(borrower);
         }
         status = LoanStatus.Cancelled;
         emit CancelLoan();
@@ -308,17 +315,23 @@ contract P2PLoanTerm is IP2PLoanTerm
 
 
     function _withdrawCollateral(address receiver) internal {
-
-        IERC721(collateral.owner).safeTransferFrom(address(this), receiver, collateral.tokenId);
-        collateral.owner = address(0);
-        emit WithdrawCollateral(receiver, collateral.owner, collateral.tokenId);
+        if(collateral.owner!=address(0)) {
+            IERC721(collateral.owner).safeTransferFrom(address(this), receiver, collateral.tokenId);
+            collateral.owner = address(0);
+            emit WithdrawCollateral(receiver, collateral.owner, collateral.tokenId);
+        }
     }
 
     /* ========== Admin FUNCTIONS ========== */
     function liquidateCollateral() external onlyAdmin {
         require(status == LoanStatus.Defaulted, "The loan is not default");
-        //TODO cross chain message is needed.
-        _withdrawCollateral(admin);
+
+        if (isCrossChain) {
+            //TODO better to consolidate with NotifyRedeemRequest, as things are very similar.
+            IP2PLoanTermFactory(factory).liquidateCollateralRequest(payFeesIn);
+        } else {
+            _withdrawCollateral(admin);
+        }
         emit LiquidateCollateral(borrower, collateral.owner, collateral.tokenId);
     }
 

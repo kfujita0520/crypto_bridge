@@ -40,13 +40,6 @@ const config: HardhatUserConfig = {
       chainId: 11155111,
       gas: 12000000
     },
-    // sepolia: {
-    //   url: process.env.ETHEREUM_SEPOLIA_RPC_URL !== undefined ? process.env.ETHEREUM_SEPOLIA_RPC_URL : '',
-    //   accounts: process.env.PRIVATE_KEY !== undefined && process.env.PRIVATE_KEY2 !== undefined ?
-    //       [process.env.PRIVATE_KEY, process.env.PRIVATE_KEY2] : [],
-    //   chainId: 11155111,
-    //   gas: 12000000
-    // },
     polygonMumbai: {
       url: process.env.POLYGON_MUMBAI_RPC_URL !== undefined ? process.env.POLYGON_MUMBAI_RPC_URL : '',
       accounts: process.env.PRIVATE_KEY !== undefined && process.env.PRIVATE_KEY2 !== undefined ?
@@ -82,7 +75,6 @@ const config: HardhatUserConfig = {
     ],
     apiKey: {
       polygonMumbai: process.env.POLYGONSCAN_API_KEY || '',
-      //sepolia: process.env.ETHERSCAN_API_KEY || '',
       ethereumSepolia: process.env.ETHERSCAN_API_KEY || '',
     },
   },

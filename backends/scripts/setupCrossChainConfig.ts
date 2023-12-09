@@ -7,8 +7,8 @@ async function main() {
     let networkName = hre.network.name;
 
     //this configuration should be updated after deploying factory contract on both chains.
-    let polygonFactory = "0x95adE6BCD887eF2Ec71C0e3755a3Fc18B816ceBf";
-    let etherFactory = "0x72e73Fd517c1aac629604fa54008cd1c6F08F585";
+    let polygonFactory = "0xDB5b67aa5A54606808F19594Fad621a60311C7fe";
+    let etherFactory = "0xe6ddA0C101841907c617D98B11a43D9c4e21e8e3";
     let LoanTermFactory;
     if (networkName == "polygonMumbai"){
         LoanTermFactory = await hre.ethers.getContractAt("P2PLoanTermFactory", polygonFactory);
