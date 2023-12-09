@@ -55,6 +55,20 @@ Verify P2PLoanTermFactory with following commands
 npx hardhat verify --network polygonMumbai --constructor-args ./scripts/verifyArgument/polygonArgument.js 0x95adE6BCD887eF2Ec71C0e3755a3Fc18B816ceBf
 npx hardhat verify --network ethereumSepolia --constructor-args ./scripts/verifyArgument/argument.js 0x72e73Fd517c1aac629604fa54008cd1c6F08F585 
 ```
+After Deploying the P2PLoanTermFactory contract, add LINK token to that contract for cross chain message fee.
+(In production, charge it to user instead paying from contract's asset.)
+
+## Testing
+Test Scripts are available under test folder. Note that in order to perfrom CCIP (send or receive) test, 
+We need to have CCIP router, so that using hardhat forking network is required. 
 
 ## Findings
-T.B.D.
+1. Gas limitation  
+The default gas limit for cross message handling is just 200,000. We need to specify the max limit by extraArgs parameter on EVM2AnyMessage.
+Our ActivateLoanTerm message required over 2,000,000 gas cost. So parameter configuration was required.  
+Also, if gas cost exceed over 2,000,000, it seems CCIP silently failed though the explorer shows it as "success". 
+That made us difficult to track the cause of problem.
+
+2. Function Signature with enum  
+In function signature, if the parameters of function used enum type, needed to specify the actual data type of enum value.
+In our case, PayFeesIn struct argument data type should be specified as uint8. 

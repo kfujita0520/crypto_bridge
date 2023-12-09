@@ -78,7 +78,7 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
         address receiver = sourceSender[destinationChainSelector];
         Client.EVM2AnyMessage memory message = Client.EVM2AnyMessage({
             receiver: abi.encode(receiver), //receiver should be Factory contract on destination chain?
-            data: abi.encodeWithSignature("activateLoanTerm(address,uint256,uint256,uint64,address,address,PayFeesIn,uint64,address)",
+            data: abi.encodeWithSignature("activateLoanTerm(address,uint256,uint256,uint64,address,address,uint8,uint64,address)",
                 _token,
                 _totalAmount,
                 _maturityPeriod,
