@@ -47,4 +47,8 @@ interface IP2PLoanTermFactory is ICCIPHandler {
     function notifyRedemptionRequest(
         PayFeesIn payFeesIn
     ) external payable;
+
+    function liquidateCollateralRequest(
+        PayFeesIn payFeesIn
+    ) external payable;
 }

@@ -91,7 +91,7 @@ contract P2PLoanTermFactory is CCIPHandler, IP2PLoanTermFactory {
             ),
             tokenAmounts: new Client.EVMTokenAmount[](0),
             extraArgs: Client._argsToBytes(
-                Client.EVMExtraArgsV1({gasLimit: 3_900_000, strict: false})
+                Client.EVMExtraArgsV1({gasLimit: 4_000_000, strict: false})
             ),
             feeToken: _payFeesIn == PayFeesIn.LINK ? i_link : address(0)
         });
