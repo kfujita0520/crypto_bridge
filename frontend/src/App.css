@@ -1,0 +1,22 @@
+.mains>p{
+    margin-left:30%;
+    margin-top: -5%;
+    margin-bottom: 5%;
+    font-size: 20px;
+}
+.mains{
+    margin-bottom: 5%;
+}
+.mains > h1 > span{
+    background-color: rgb(57, 57, 176);
+    margin-left: 10px;
+    margin-right: 10px;
+    padding: 10px;
+}
+.mains > h1{
+    width: 55%;
+}
+
+  
+
+  

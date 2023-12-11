@@ -1,0 +1,66 @@
+.component-box {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  max-width: 600px; /* Adjust as needed for your design */
+  margin: auto;
+}
+
+.component-box h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.component-box form {
+  display: flex;
+  flex-direction: column;
+}
+
+.component-box form label {
+  margin-top: 10px;
+}
+
+.component-box form input,
+.component-box form select {
+  margin-top: 5px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc; /* Light grey border */
+}
+
+.component-box form button {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #007bff; /* Bootstrap primary color for demo */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.component-box form button:hover {
+  background-color: #0056b3; /* Darken the button on hover */
+}
+
+.toast {
+  position: fixed;
+  top: 20px; /* Adjust as needed */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background-color: #04AA6D; /* Success color */
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeOut 8s;
+}
+
+.toast-failure {
+  background-color: #D32F2F; /* Failure color */
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

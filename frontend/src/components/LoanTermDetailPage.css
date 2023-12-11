@@ -1,0 +1,42 @@
+/* Existing CSS */
+.component-box .term-detail,
+.component-box .status-detail {
+  margin-bottom: 20px;
+}
+
+.component-box h3 {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.component-box p {
+  margin: 5px 0;
+  line-height: 1.5;
+}
+
+/* Updated CSS for Loan Term Detail and Status Detail sections */
+.term-detail,
+.status-detail {
+  border: 1px solid #ddd;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.term-detail h3,
+.status-detail h3 {
+  background-color: #007bff;
+  color: #fff;
+  padding: 5px;
+  margin: -15px -15px 15px -15px;
+  text-align: center;
+}
+
+.term-detail p,
+.status-detail p {
+  margin: 5px 0;
+}
+
+.term-detail p:last-child,
+.status-detail p:last-child {
+  margin-bottom: 0;
+}
