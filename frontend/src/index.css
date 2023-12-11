@@ -1,0 +1,21 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: black;
+  background-color: white;
+  
+  
+
+
+}
+body{
+margin: 0;
+}
+
+.component-box{
+  height:100px;
+  padding:90px;
+}

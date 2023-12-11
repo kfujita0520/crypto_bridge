@@ -1,0 +1,73 @@
+
+
+.outer {
+    margin-top: 0px;
+    margin-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    height: 360px;
+    background-color: transparent;
+    border: 3px solid #374e61;
+    border-radius: 30px;
+    transition: transform 0.6s ease-in-out; 
+  }
+  .outer > p {
+    margin-top: 0px;
+    margin-left: 20px;
+    line-height: 1.5;
+  }
+  .outer:hover {
+    box-shadow: 0 0 20px black; 
+    transform: scale(1.07) ;
+    transition: transform 0.6s ease-in-out; 
+  }
+  .outer:hover .image-container > img {
+    transform: rotateY(360deg); 
+    transition: transform 0.6s ease-in-out; 
+  }
+  .outer > button {
+    background-color: black;
+    color: white;
+    border-radius: 4px;
+    
+    margin-bottom: 50px;
+    
+  }
+  .outer > button:hover{
+    background-color: white;
+    color: black;
+    border: 2px solid black;
+  }
+  .image-container {
+    position: relative;
+    width: 30%;
+    
+    display: flex;
+    align-items:center ;
+    justify-content: center;
+    
+    
+  }
+  
+  .image-container > img {
+    margin-top: 20px;
+    width: 100%;
+    height: 90px;
+    opacity: 100%;
+    margin-top:50px;
+  
+  }
+  
+  
+  .written {
+    color: black
+  }
+  
+  .para {
+    padding: 0px 20px;
+  }
+  

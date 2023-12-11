@@ -1,0 +1,237 @@
+.image{
+    background-color: black;
+}
+img{
+   
+    height: 90vh;
+    width: 100%;
+    opacity: 50%;
+}
+
+.heading {
+    position:absolute;
+    margin-top: -600px;
+    margin-left: 20px;
+}
+.heading > h1{
+    font-size: 50px;
+    color: white;
+    
+}
+.two{
+    margin-top: -50px;
+}
+.three{
+    margin-top: -30px;
+    color: #D7DBDF;
+}
+.heading > h3 {
+    font-size: 20px;
+}
+
+/* Your stylesheet */
+.video-container {
+    position: relative;
+    width: 100%;
+    height: 115vh; 
+    overflow: hidden;
+  }
+  
+  .video {
+    width: 100%;
+    height: 100%;
+    
+    object-fit: cover; 
+  }
+
+ 
+  .differ{
+    font-size: 50px;
+    width: 50%;
+    margin-left: 390px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    color: white;
+  }
+ 
+  .cardz{
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Creates four equal-width columns */
+    gap: 46px;
+    margin: 60px;
+  }
+  
+  .creditScore {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  
+  .creditScore .credit-img {
+    position: relative;
+  }
+  
+  .creditScore .credit-img > img {
+    width: 100%;
+    height: 95vh;
+    display: block;
+    opacity: 100%;
+  }
+  
+  .creditScore .credit-img::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1));
+    pointer-events: none; /* This makes sure the pseudo-element doesn't interfere with mouse events */
+  }
+  .info{
+    display: flex;
+   
+    flex-direction: column;
+    justify-content: flex-start;
+    position: absolute;
+    margin-left: 53%;
+    margin-bottom: 13%;
+
+  }
+  .info > h1{
+    font-size: 55px;
+    font-weight: 700;
+  }
+  .info > h1 > span{
+    color: rgb(57, 57, 176);
+  }
+  .info > p {
+    width: 80%;
+    margin-top: 0%;
+    font-size: 30px;
+  }
+  .info button{
+    width: 40%;
+    height: 55px;
+    border-radius: 10px;
+    font-size: 20px;
+    margin-top: 5%;
+  }
+  .info button:hover{
+    background-color: transparent;
+    border: 2px solid  rgb(57, 57, 176);
+    color:  rgb(57, 57, 176);
+
+  }
+  .advantages-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 50px;
+    
+    margin-bottom: 100px;
+    
+    
+  }
+ 
+  .advantage {
+    width: 100%;
+    transition: transform 0.2s ease-in-out; /* Add a transition for the transform property */
+  }
+  
+  .advantage:hover {
+    transform: translateY(-15px); /* Adjust the value as needed to control the upward movement */
+  }
+  .advantage .content{
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  
+  .advantage-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 80%;
+    height: 30vh;
+    
+    background-color: white;
+    border: 3px solid black;
+    border-radius: 40px;
+    transition: border 0.3s ease-in-out,background-color 0.3s ease-in-out;
+    box-sizing: border-box;
+  }
+  .advantage-container:hover .count{
+    background-color: white;
+    border: 3px solid black;
+    
+    color: black
+  }
+  
+  
+  .content {
+    position: relative;
+    display: flex;
+    margin-bottom: 40px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    opacity: 100%;
+    
+    
+  }
+  .content img{
+    width: 40%;
+    height: 50%;
+    opacity: 100%;
+    transition: transform 0.3s ease-in-out;
+  }
+  .advantage:hover img {
+    transform: rotateY(180deg);
+
+  }
+  .content h3{
+    color: black;
+    margin-bottom: 90px;
+    
+  }
+ 
+  
+  
+  
+  .count {
+    
+    
+    border: none;
+    
+    position: relative;
+    margin-top: 38%;
+    margin-left: -96% ;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: black;
+    color: white;
+    font-size: 35px;
+    width: 60px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+  .title{
+    background-color: black;
+    display: flex;
+    margin-top: 100px;
+    color: white;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 100px;
+    width: 50%;
+    margin-left: 25%;
+  }
